@@ -12,6 +12,7 @@ const DiscriminantR3F = dynamic(() => import('@/components/r3f/DiscriminantR3F')
 const ConicSectionR3F = dynamic(() => import('@/components/r3f/ConicSectionR3F'), { ssr: false })
 const NormalDistR3F = dynamic(() => import('@/components/r3f/NormalDistR3F'), { ssr: false })
 const VectorR3F = dynamic(() => import('@/components/r3f/VectorR3F'), { ssr: false })
+const FundamentalTheoremR3F = dynamic(() => import('@/components/r3f/FundamentalTheoremR3F'), { ssr: false })
 
 // 고등 3D visualType 목록
 const HIGH_3D_TYPES = new Set([
@@ -88,6 +89,7 @@ export default function FormulaVizClient({ visualType, values, height = 240, for
   if (visualType === 'conic_section' && !forceCanvas2D) return <><ConicSectionR3F />{hint3D}</>
   if (visualType === 'normal_dist' && !forceCanvas2D) return <><NormalDistR3F />{hint3D}</>
   if (visualType === 'vector_2d' && !forceCanvas2D) return <><VectorR3F />{hint3D}</>
+  if (visualType === 'fundamental_theorem' && !forceCanvas2D) return <><FundamentalTheoremR3F />{hint3D}</>
 
   return (
     <>

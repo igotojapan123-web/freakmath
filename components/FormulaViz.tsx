@@ -3135,7 +3135,47 @@ switch (type) {
       break
     }
 
-    case 'definite_integral': case 'indefinite_integral': case 'area_integral': case 'velocity_integral': case 'fundamental_theorem': {
+    case 'fundamental_theorem': {
+      const ftx = Math.max(0.1, v('x', 3))
+      const ftSc = 35, ftScY = 18, ftBase = cy - 10
+      // f(x) = 0.5sin(x)+1.5
+      const ftf = (x: number) => 0.5 * Math.sin(x) + 1.5
+      // F(x) = -0.5cos(x)+1.5x+0.5
+      const ftF = (x: number) => -0.5 * Math.cos(x) + 1.5 * x + 0.5
+      // 좌표축 (위쪽: f(x))
+      gLine(30, ftBase, W - 30, ftBase, 'rgba(255,255,255,0.15)', 1, p)
+      gLine(cx - 100, 20, cx - 100, H - 20, 'rgba(255,255,255,0.15)', 1, p)
+      // f(x) 곡선
+      ctx.save(); ctx.globalAlpha = p; ctx.strokeStyle = PURPLE; ctx.lineWidth = 2.5
+      ctx.shadowBlur = 10; ctx.shadowColor = PURPLE; ctx.beginPath()
+      let st2 = false
+      for (let x = 0; x <= 6; x += 0.05) {
+        const sx = cx - 100 + x * ftSc, sy = ftBase - ftf(x) * ftScY
+        if (sx < 30 || sx > W - 30) { st2 = false; continue }
+        if (!st2) { ctx.moveTo(sx, sy); st2 = true } else ctx.lineTo(sx, sy)
+      }
+      ctx.stroke(); ctx.restore()
+      gText('f(x)', cx - 100 + 6.2 * ftSc, ftBase - ftf(6) * ftScY, PURPLE, 11, p)
+      // 0~x 넓이 채우기
+      ctx.save(); ctx.globalAlpha = p * 0.25; ctx.fillStyle = MINT; ctx.beginPath()
+      ctx.moveTo(cx - 100, ftBase)
+      for (let x = 0; x <= ftx; x += 0.05) {
+        ctx.lineTo(cx - 100 + x * ftSc, ftBase - ftf(x) * ftScY)
+      }
+      ctx.lineTo(cx - 100 + ftx * ftSc, ftBase)
+      ctx.closePath(); ctx.fill(); ctx.restore()
+      // x 수직선
+      gLine(cx - 100 + ftx * ftSc, ftBase, cx - 100 + ftx * ftSc, ftBase - ftf(ftx) * ftScY, AMBER, 2, p)
+      // F(x) 값 표시
+      gText(`x = ${r(ftx, 1)}`, cx - 100 + ftx * ftSc, ftBase + 16, AMBER, 11, p)
+      gText(`F(${r(ftx, 1)}) = ${r(ftF(ftx))}`, cx + 60, 24, MINT, 14, p)
+      gText(`f(${r(ftx, 1)}) = ${r(ftf(ftx))}`, cx + 60, 44, PURPLE, 12, p)
+      gText("넓이의 변화율 = f(x)", cx, H - 18, '#999', 12, p)
+      gText("F'(x) = f(x)", cx, H - 36, AMBER, 13, p)
+      break
+    }
+
+    case 'definite_integral': case 'indefinite_integral': case 'area_integral': case 'velocity_integral': {
       const sc5=35,scY2=20,baseY2=cy+40
       const iLow=v('a',0),iHigh=v('b',2)
       gLine(30,baseY2,W-30,baseY2,'rgba(255,255,255,0.12)',1,p);gLine(cx,20,cx,H-20,'rgba(255,255,255,0.12)',1,p)
