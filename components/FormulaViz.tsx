@@ -3056,9 +3056,26 @@ switch (type) {
     }
 
     case 'trig_func': {
-      const r2=Math.min(70,H/2-25),angle=(T*0.02)%(Math.PI*2)
-      gCircle(cx-80,cy,r2,'rgba(255,255,255,0.15)',false,p)
-      if(p>0.2){const px=cx-80+Math.cos(angle)*r2,py=cy-Math.sin(angle)*r2;gLine(cx-80,cy,px,py,WHITE,2,p);gCircle(px,py,4,MINT,true,p);gLine(px,cy,px,py,MINT,2,p*0.8);gLine(cx-80,cy,px,cy,PURPLE,2,p*0.8);gText(`sin=${r(Math.sin(angle))}`,cx+50,cy-20,MINT,13,p);gText(`cos=${r(Math.cos(angle))}`,cx+50,cy+20,PURPLE,13,p)}
+      const angleDeg = v('angle', 45)
+      const angle = angleDeg * Math.PI / 180
+      const r2 = Math.min(70, H / 2 - 25), ocx = cx - 80
+      // 단위원
+      gCircle(ocx, cy, r2, 'rgba(255,255,255,0.15)', false, p)
+      // 축
+      gLine(ocx - r2 - 10, cy, ocx + r2 + 10, cy, 'rgba(255,255,255,0.12)', 1, p)
+      gLine(ocx, cy - r2 - 10, ocx, cy + r2 + 10, 'rgba(255,255,255,0.12)', 1, p)
+      // 점 P
+      const px = ocx + Math.cos(angle) * r2, py = cy - Math.sin(angle) * r2
+      gLine(ocx, cy, px, py, WHITE, 2, p)
+      gCircle(px, py, 5, MINT, true, p)
+      // cos 투영 (x축)
+      gLine(px, cy, px, py, MINT, 2, p * 0.7)
+      gLine(ocx, cy, px, cy, PURPLE, 2, p * 0.7)
+      // 값 표시
+      gText(`θ = ${Math.round(angleDeg)}°`, cx + 60, cy - 40, AMBER, 14, p)
+      gText(`sin θ = ${r(Math.sin(angle))}`, cx + 60, cy - 10, MINT, 13, p)
+      gText(`cos θ = ${r(Math.cos(angle))}`, cx + 60, cy + 15, PURPLE, 13, p)
+      gText('P(cos θ, sin θ)', cx + 60, cy + 45, '#999', 11, p)
       break
     }
 
@@ -3086,13 +3103,35 @@ switch (type) {
     }
 
     case 'derivative_coeff': case 'derivative_func': case 'diff_formula': case 'diff_application': case 'max_min': case 'tangent_line': {
-      const sc4=35,scY=20,baseY=cy+40
-      const dCoeff=v('c',2),dShift=v('shift',2)
-      gLine(30,baseY,W-30,baseY,'rgba(255,255,255,0.12)',1,p);gLine(cx,20,cx,H-20,'rgba(255,255,255,0.12)',1,p)
-      if(p>0.15){const cp=easeOutCubic((p-0.15)/0.6);ctx.save();ctx.globalAlpha=cp;ctx.strokeStyle=MINT;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=MINT;ctx.beginPath();let st=false;for(let x=-4;x<=4;x+=0.05){const y=x*x-dShift;const sx=cx+x*sc4,sy=baseY-y*scY;if(sy<20||sy>H-20){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)};ctx.stroke();ctx.restore()}
-      // 접선
-      const ta=((T%300)/300)*6-3
-      if(p>0.5){const tp=easeOutCubic((p-0.5)/0.4);const ty=ta*ta-dShift;const slope=dCoeff*ta;const sx=cx+ta*sc4,sy=baseY-ty*scY;gCircle(sx,sy,5,AMBER,true,tp);ctx.save();ctx.globalAlpha=tp*0.7;ctx.strokeStyle=AMBER;ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor=AMBER;ctx.beginPath();ctx.moveTo(sx-60,sy+slope*60*scY/sc4);ctx.lineTo(sx+60,sy-slope*60*scY/sc4);ctx.stroke();ctx.restore();gText(`f'(${r(ta,1)}) = ${r(slope,1)}`,sx+40,sy-20,AMBER,12,tp)}
+      const sc4 = 35, scY = 20, baseY = cy + 40
+      const tx = v('x', 2.5)
+      // f(x) = 0.15x³ - 0.8x² + 1.5x + 1 (R3F와 같은 함수)
+      const fDx = (x: number) => 0.15*x*x*x - 0.8*x*x + 1.5*x + 1
+      const fDPrime = (x: number) => 0.45*x*x - 1.6*x + 1.5
+      // 좌표축
+      gLine(30, baseY, W - 30, baseY, 'rgba(255,255,255,0.12)', 1, p)
+      gLine(cx, 20, cx, H - 20, 'rgba(255,255,255,0.12)', 1, p)
+      // 곡선
+      ctx.save(); ctx.globalAlpha = p; ctx.strokeStyle = MINT; ctx.lineWidth = 2.5
+      ctx.shadowBlur = 10; ctx.shadowColor = MINT; ctx.beginPath(); let st = false
+      for (let x = -2; x <= 6; x += 0.05) {
+        const y = fDx(x); const sx = cx + (x - 2.5) * sc4, sy = baseY - y * scY
+        if (sy < 20 || sy > H - 20) { st = false; continue }
+        if (!st) { ctx.moveTo(sx, sy); st = true } else ctx.lineTo(sx, sy)
+      }
+      ctx.stroke(); ctx.restore()
+      // 접선 at x=tx
+      const ty = fDx(tx), slope = fDPrime(tx)
+      const sx = cx + (tx - 2.5) * sc4, sy = baseY - ty * scY
+      gCircle(sx, sy, 6, AMBER, true, p)
+      ctx.save(); ctx.globalAlpha = p * 0.7; ctx.strokeStyle = AMBER; ctx.lineWidth = 2
+      ctx.shadowBlur = 8; ctx.shadowColor = AMBER; ctx.beginPath()
+      ctx.moveTo(sx - 70, sy + slope * 70 * scY / sc4)
+      ctx.lineTo(sx + 70, sy - slope * 70 * scY / sc4)
+      ctx.stroke(); ctx.restore()
+      gText(`x = ${r(tx, 1)}`, sx, sy - 24, AMBER, 12, p)
+      gText(`기울기 f'(${r(tx, 1)}) = ${r(slope, 2)}`, cx, 22, AMBER, 14, p)
+      gText('f(x)', W - 50, 40, MINT, 12, p)
       break
     }
 
@@ -3171,6 +3210,72 @@ switch (type) {
       break
     }
 
+    case 'induction': {
+      const nDom = Math.max(2, Math.min(20, Math.round(v('n', 5))))
+      const domW = Math.min(30, (W - 60) / nDom - 4), domH = domW * 2.5
+      const baseY = cy + domH / 2 + 10, ox = cx - (nDom * (domW + 4)) / 2
+      for (let i = 0; i < nDom; i++) {
+        const x = ox + i * (domW + 4)
+        const color = i === 0 ? '#D85A30' : PURPLE
+        // 넘어진 도미노 (비스듬히)
+        ctx.save()
+        ctx.translate(x + domW / 2, baseY)
+        ctx.rotate(-Math.PI / 2 * 0.85)
+        ctx.globalAlpha = p * 0.85
+        ctx.fillStyle = color + '44'; ctx.strokeStyle = color; ctx.lineWidth = 2
+        ctx.shadowBlur = 8; ctx.shadowColor = color
+        ctx.fillRect(-domW / 2, -domH / 2, domW, domH)
+        ctx.strokeRect(-domW / 2, -domH / 2, domW, domH)
+        ctx.restore()
+        gText(String(i + 1), x + domW / 2, baseY - domH / 2 - 12, 'rgba(255,255,255,0.5)', 10, p)
+      }
+      gText(`도미노 ${nDom}개`, cx, 22, AMBER, 14, p)
+      gText('P(1) 참 + P(k)→P(k+1) = 모두 참', cx, H - 18, '#999', 12, p)
+      break
+    }
+
+    case 'conic_section': {
+      const cType = Math.round(v('angle', 0)) % 4
+      const sc = Math.min(60, Math.min(W - 80, H - 80) / 4)
+      // 좌표축
+      gLine(cx - sc * 3, cy, cx + sc * 3, cy, 'rgba(255,255,255,0.12)', 1, p)
+      gLine(cx, cy - sc * 3, cx, cy + sc * 3, 'rgba(255,255,255,0.12)', 1, p)
+      const names = ['원', '타원', '포물선', '쌍곡선']
+      const colors = [MINT, PURPLE, AMBER, '#D85A30']
+      const col = colors[cType]
+      // 곡선
+      ctx.save(); ctx.globalAlpha = p; ctx.strokeStyle = col; ctx.lineWidth = 2.5
+      ctx.shadowBlur = 12; ctx.shadowColor = col; ctx.beginPath()
+      if (cType === 0) { // 원
+        ctx.arc(cx, cy, sc * 1.5, 0, Math.PI * 2)
+      } else if (cType === 1) { // 타원
+        ctx.ellipse(cx, cy, sc * 2, sc * 1.2, 0, 0, Math.PI * 2)
+      } else if (cType === 2) { // 포물선 y=x²
+        let started = false
+        for (let t = -2.5; t <= 2.5; t += 0.05) {
+          const sx = cx + t * sc, sy = cy - (t * t * 0.4) * sc + sc * 2
+          if (!started) { ctx.moveTo(sx, sy); started = true } else ctx.lineTo(sx, sy)
+        }
+      } else { // 쌍곡선
+        // 좌측 가지
+        let started = false
+        for (let t = -1.8; t <= 1.8; t += 0.05) {
+          const x = -Math.cosh(t) * sc, y = Math.sinh(t) * sc * 0.7
+          if (!started) { ctx.moveTo(cx + x, cy - y); started = true } else ctx.lineTo(cx + x, cy - y)
+        }
+        // 우측 가지
+        ctx.moveTo(cx + Math.cosh(-1.8) * sc, cy - Math.sinh(-1.8) * sc * 0.7)
+        for (let t = -1.8; t <= 1.8; t += 0.05) {
+          const x = Math.cosh(t) * sc, y = Math.sinh(t) * sc * 0.7
+          ctx.lineTo(cx + x, cy - y)
+        }
+      }
+      ctx.stroke(); ctx.restore()
+      gText(names[cType], cx, 22, col, 16, p)
+      gText('0=원  1=타원  2=포물선  3=쌍곡선', cx, H - 18, '#666', 11, p)
+      break
+    }
+
     // 나머지 고등 케이스: 앰버 원 fallback
     case 'poly_add': case 'poly_mul_h': case 'expand_formula': case 'factor_h':
     case 'remainder_theorem': case 'factor_theorem': case 'complex_number':
@@ -3180,14 +3285,14 @@ switch (type) {
     case 'combination': case 'binomial_theorem': case 'set_operation':
     case 'proposition': case 'function_h': case 'composite_func':
     case 'inverse_func': case 'rational_func': case 'irrational_func':
-    case 'arithmetic_sum': case 'geometric_sum': case 'induction':
+    case 'arithmetic_sum': case 'geometric_sum':
     case 'exp_log_eq': case 'trig_addition': case 'sine_rule':
     case 'cosine_rule': case 'seq_limit': case 'series': case 'func_limit':
     case 'continuity': case 'prob_addition': case 'conditional_prob':
     case 'independence': case 'discrete_rv': case 'binomial_dist':
     case 'sampling_dist': case 'confidence_interval': case 'proportion_estimate':
     case 'hypothesis_test': case 'line_eq': case 'circle_eq':
-    case 'transformation': case 'conic_section': case 'space_vector': {
+    case 'transformation': case 'space_vector': {
       const pulse2 = 0.8 + Math.sin(T * 0.04) * 0.2
       ctx.save(); ctx.globalAlpha = p * pulse2 * 0.12; ctx.fillStyle = AMBER
       ctx.beginPath(); ctx.arc(cx, cy, 55, 0, Math.PI * 2); ctx.fill(); ctx.restore()
