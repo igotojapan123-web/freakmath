@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
+
+const PythagorasR3F = dynamic(() => import('@/components/PythagorasR3F'), { ssr: false })
 
 // 고등 3D visualType 목록
 const HIGH_3D_TYPES = new Set([
@@ -59,6 +62,11 @@ export default function FormulaVizClient({ visualType, values, height = 240, for
         {is3D ? '3D 시각화 로딩 중...' : '애니메이션 로딩 중...'}
       </div>
     )
+  }
+
+  // 피타고라스: R3F 전용 컴포넌트
+  if (visualType === 'pythagoras_viz' && !forceCanvas2D) {
+    return <PythagorasR3F />
   }
 
   return <Viz visualType={visualType} values={values} height={height} />
