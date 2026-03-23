@@ -3147,12 +3147,44 @@ switch (type) {
     }
 
     case 'normal_dist': {
-      const mu=v('mu',0),sigma=v('sigma',1)
-      const sc6=50,ampH=H*0.6
-      gLine(30,cy+60,W-30,cy+60,'rgba(255,255,255,0.12)',1,p)
-      if(p>0.1){const cp=easeOutCubic((p-0.1)/0.7);ctx.save();ctx.globalAlpha=cp;ctx.fillStyle=MINT+'22';ctx.strokeStyle=MINT;ctx.lineWidth=2.5;ctx.shadowBlur=12;ctx.shadowColor=MINT;ctx.beginPath();const baseY3=cy+60;ctx.moveTo(30,baseY3);for(let x=-4;x<=4;x+=0.05){const y=(1/(sigma*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*Math.pow((x-mu)/sigma,2));const sx=cx+x*sc6,sy=baseY3-y*ampH*sigma;if(sx>=30&&sx<=W-30)ctx.lineTo(sx,sy)};ctx.lineTo(W-30,baseY3);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}
-      if(p>0.6){const fp=easeOutCubic((p-0.6)/0.4);gLine(cx+mu*sc6,cy+60,cx+mu*sc6,40,AMBER,2,fp);gText(`\u03BC=${mu}`,cx+mu*sc6,32,AMBER,12,fp);gText(`\u03C3=${sigma}`,cx+mu*sc6+50,32,PURPLE,12,fp)}
-      if(p>0.85) gText('N(\u03BC, \u03C3\u00B2)',cx,H-16,MINT,14,easeOutCubic((p-0.85)/0.15))
+      const mu = v('mu', 0), sigma = Math.max(0.1, v('sigma', 1))
+      const sc6 = 50, baseY3 = cy + 60
+      const nPdf = (x: number) => (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2))
+      const ampH = H * 0.6 * sigma
+      // x축
+      gLine(30, baseY3, W - 30, baseY3, 'rgba(255,255,255,0.12)', 1, p)
+      // 68% 영역 채우기 (μ±σ)
+      ctx.save(); ctx.globalAlpha = p * 0.2; ctx.fillStyle = MINT; ctx.beginPath()
+      ctx.moveTo(clx(cx + (mu - sigma) * sc6), baseY3)
+      for (let x = mu - sigma; x <= mu + sigma; x += 0.05) {
+        const sx = clx(cx + x * sc6), sy = cly(baseY3 - nPdf(x) * ampH)
+        ctx.lineTo(sx, sy)
+      }
+      ctx.lineTo(clx(cx + (mu + sigma) * sc6), baseY3)
+      ctx.closePath(); ctx.fill(); ctx.restore()
+      // 곡선
+      ctx.save(); ctx.globalAlpha = p; ctx.strokeStyle = MINT; ctx.lineWidth = 2.5
+      ctx.shadowBlur = 12; ctx.shadowColor = MINT; ctx.beginPath()
+      let started = false
+      for (let x = -4; x <= 4; x += 0.05) {
+        const sx = cx + x * sc6, sy = baseY3 - nPdf(x) * ampH
+        if (sx < 30 || sx > W - 30) { started = false; continue }
+        if (!started) { ctx.moveTo(sx, sy); started = true } else ctx.lineTo(sx, sy)
+      }
+      ctx.stroke(); ctx.restore()
+      // μ 수직선
+      gLine(cx + mu * sc6, baseY3, cx + mu * sc6, 35, AMBER, 2, p)
+      gText(`μ = ${r(mu)}`, cx + mu * sc6, 24, AMBER, 13, p)
+      // ±σ 마커
+      const s1L = cx + (mu - sigma) * sc6, s1R = cx + (mu + sigma) * sc6
+      gLine(s1L, baseY3, s1L, baseY3 - nPdf(mu - sigma) * ampH, PURPLE, 1.5, p * 0.5)
+      gLine(s1R, baseY3, s1R, baseY3 - nPdf(mu + sigma) * ampH, PURPLE, 1.5, p * 0.5)
+      gText('-σ', s1L, baseY3 + 16, PURPLE, 10, p)
+      gText('+σ', s1R, baseY3 + 16, PURPLE, 10, p)
+      gText('68%', cx + mu * sc6, baseY3 - nPdf(mu) * ampH * 0.4, MINT, 13, p)
+      // 하단 정보
+      gText(`σ = ${r(sigma)}`, cx + mu * sc6 + 60, 24, PURPLE, 13, p)
+      gText('N(μ, σ²)', cx, H - 16, MINT, 14, p)
       break
     }
 
