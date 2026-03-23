@@ -139,8 +139,8 @@ function IntegralRange({ phase }: { phase: ReturnType<typeof getPhase> }) {
 
       {/* a 라벨 — 곡선 아래 충분히 떨어짐 */}
       <Text
-        position={[a - 3, -0.6, 0.1]}
-        fontSize={0.35}
+        position={[a - 3, -1.0, 0.1]}
+        fontSize={0.525}
         color={CORAL}
         anchorX="center"
         anchorY="middle"
@@ -151,8 +151,8 @@ function IntegralRange({ phase }: { phase: ReturnType<typeof getPhase> }) {
 
       {/* b 라벨 — 곡선 아래 충분히 떨어짐 */}
       <Text
-        position={[b - 3, -0.6, 0.1]}
-        fontSize={0.35}
+        position={[b - 3, -1.0, 0.1]}
+        fontSize={0.525}
         color={CORAL}
         anchorX="center"
         anchorY="middle"
@@ -264,18 +264,18 @@ function Axes({ phase }: { phase: ReturnType<typeof getPhase> }) {
       </line>
 
       {/* x축 라벨 — 축 아래 충분히 떨어짐 */}
-      <Text position={[3.5, -0.4, 0.1]} fontSize={0.28} color="#888899" anchorX="center">
+      <Text position={[3.5, -0.4, 0.1]} fontSize={0.42} color="#888899" anchorX="center">
         x
       </Text>
-      
+
       {/* y축 라벨 — 축 왼쪽으로 떨어짐 */}
-      <Text position={[-3.5, 3.5, 0.1]} fontSize={0.28} color="#888899" anchorX="center">
+      <Text position={[-3.5, 3.5, 0.1]} fontSize={0.42} color="#888899" anchorX="center">
         y
       </Text>
 
       {/* 함수 라벨 — 곡선 오른쪽 위, 다른 요소와 안 겹치는 위치 */}
       {['curve','range','bars4','count4','bars8','count8','bars20','count20','exact','hold'].includes(phase.name) && (
-        <Text position={[2.8, 2.8, 0.1]} fontSize={0.3} color={PURPLE} anchorX="center">
+        <Text position={[0.5, 3.3, 0.1]} fontSize={0.45} color={PURPLE} anchorX="center">
           f(x)
         </Text>
       )}
@@ -296,19 +296,81 @@ function Floor() {
   )
 }
 
-// --- 메인 씬 (디버그 모드: 테스트 박스) ---
+// --- 메인 씬 ---
 function Scene() {
+  const [time, setTime] = useState(0)
+
+  useFrame((_, delta) => {
+    setTime(prev => prev + delta)
+  })
+
+  const phase = getPhase(time)
+
+  const showBars4 = ['bars4', 'count4'].includes(phase.name)
+  const showBars8 = ['bars8', 'count8'].includes(phase.name)
+  const showBars20 = ['bars20', 'count20', 'exact', 'hold'].includes(phase.name)
+
   return (
     <>
       <ambientLight intensity={0.5} />
-      <directionalLight position={[5, 8, 5]} intensity={0.8} />
+      <directionalLight
+        position={[6, 12, 8]}
+        intensity={0.9}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
+        shadow-radius={3}
+      />
+      <directionalLight position={[-4, 6, -4]} intensity={0.2} />
 
-      {/* 디버그: 테스트 박스 */}
-      <mesh position={[0, 1, 0]}>
-        <boxGeometry args={[2, 2, 2]} />
-        <meshStandardMaterial color="#534AB7" />
-      </mesh>
-      <gridHelper args={[10, 10, '#333', '#222']} />
+      <Floor />
+      <Axes phase={phase} />
+      <Curve phase={phase} />
+      <IntegralRange phase={phase} />
+
+      {showBars4 && <RiemannBars n={4} phase={phase} activePhase="bars4" color={TEAL} />}
+      {showBars8 && <RiemannBars n={8} phase={phase} activePhase="bars8" color={TEAL} />}
+      {showBars20 && <RiemannBars n={20} phase={phase} activePhase="bars20" color={TEAL} />}
+
+      {phase.name === 'count4' && (
+        <Text position={[3.5, 4.2, 0.1]} fontSize={0.525} color={TEAL} anchorX="center">
+          {'4개 막대 ≈ 9.60'}
+        </Text>
+      )}
+      {phase.name === 'count8' && (
+        <Text position={[3.5, 4.2, 0.1]} fontSize={0.525} color={TEAL} anchorX="center">
+          {'8개 막대 ≈ 9.90'}
+        </Text>
+      )}
+      {(phase.name === 'count20' || phase.name === 'exact' || phase.name === 'hold') && (
+        <Text position={[3.5, 4.2, 0.1]} fontSize={0.525} color={TEAL} anchorX="center">
+          {'20개 막대 ≈ 10.13'}
+        </Text>
+      )}
+
+      {(phase.name === 'exact' || phase.name === 'hold') && (
+        <group>
+          <Text position={[0, 5, 0.1]} fontSize={0.675} color={CORAL} anchorX="center">
+            {'∫₁⁵ f(x)dx = 10.13'}
+          </Text>
+          <Text position={[0, 4.3, 0.1]} fontSize={0.42} color="#999999" anchorX="center">
+            {'막대를 무한히 쪼개면 → 정확한 넓이'}
+          </Text>
+        </group>
+      )}
+
+      <OrbitControls
+        enableZoom={true}
+        enablePan={false}
+        autoRotate={false}
+        minPolarAngle={Math.PI / 6}
+        maxPolarAngle={Math.PI / 2.2}
+        minDistance={6}
+        maxDistance={18}
+      />
     </>
   )
 }
@@ -366,7 +428,7 @@ export default function DefiniteIntegralR3F() {
     <div style={{ position: 'relative', width: '100%', height: '700px' }}>
       <Canvas
         shadows
-        camera={{ position: [0, 4, 10], fov: 40 }}
+        camera={{ position: [0, 3, 12], fov: 40 }}
         gl={{ antialias: true, alpha: false }}
         dpr={[1, 2]}
       >
