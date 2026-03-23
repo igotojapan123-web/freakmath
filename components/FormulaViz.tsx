@@ -2286,8 +2286,8 @@ switch (type) {
       const maxSide = Math.max(sA, sB, Math.ceil(sC));
       const u = Math.min(W / (maxSide * 4 + 10), H / (maxSide * 3 + 8));
 
-      // 좌표 기준점
-      const triCx = W * 0.48, triCy = H * 0.25;
+      // 좌표 기준점 — 왼쪽에 삼각형, 오른쪽에 c²
+      const triCx = W * 0.30, triCy = H * 0.20;
       const Ax = triCx - sB * u / 2, Ay = triCy + sA * u / 2;
       const Bx = triCx + sB * u / 2, By = Ay;
       const Tx = Ax, Ty = Ay - sA * u;
@@ -2295,10 +2295,10 @@ switch (type) {
       const totalTiles = sA * sA + sB * sB;
       const sCI = Math.ceil(sC);
 
-      // 정사각형 위치
-      const sqAox = Tx - sA * u - u * 1.0, sqAoy = Ty;
-      const sqBox = Ax, sqBoy = Ay + u * 1.0;
-      const cDestX = W * 0.5 - sCI * u / 2, cDestY = H * 0.58;
+      // 정사각형 위치 — 좌우 분리
+      const sqAox = triCx - sB * u / 2 - sA * u - u * 1.5, sqAoy = Ty;
+      const sqBox = Ax, sqBoy = Ay + u * 1.5;
+      const cDestX = W * 0.55, cDestY = H * 0.15;
       
       // 부드러운 이징
       const eIO = (t: number) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3) / 2;
@@ -2351,7 +2351,7 @@ switch (type) {
       const lblP = cl((p - 0.08) / 0.08);
       if (lblP > 0) {
         gText('a = ' + sA, sqAox + sA * u / 2, Ty - 14, '#534AB7', 18, eO(lblP));
-        gText('b = ' + sB, (Ax + Bx) / 2, sqBoy + sB * u + 28, '#1D9E75', 18, eO(lblP));
+        gText('b = ' + sB, (Ax + Bx) / 2, sqBoy + sB * u + 35, '#1D9E75', 18, eO(lblP));
         gText('c = ' + sC, Bx + (Tx - Bx) / 2 + 40, (By + Ty) / 2, '#D85A30', 18, eO(lblP));
       }
       
@@ -2449,7 +2449,7 @@ switch (type) {
         }
         ctx.setLineDash([]);
         ctx.restore();
-        gText('c² = ?', cDestX + sCI * u / 2, cDestY - 12, '#D85A30', 15, eO(cFrameP));
+        gText('c\u00B2 = ?', cDestX + sCI * u / 2, cDestY - 15, '#D85A30', 15, eO(cFrameP));
       }
       
       // === 칸 이동 애니메이션 ===
@@ -2552,9 +2552,9 @@ switch (type) {
       const eqP = cl((p - 0.90) / 0.10);
       if (eqP > 0) {
         const ep = eO(eqP);
-        gText(sA*sA + ' + ' + sB*sB + ' = ' + sC*sC, cx, H * 0.91, '#ffffff', 18, ep);
-        gText('직각삼각형의 두 짧은 변에 정사각형을 그리면', cx, H * 0.95, 'rgba(255,255,255,0.6)', 13, ep);
-        gText('그 넓이의 합은 빗변의 정사각형 넓이와 항상 같다', cx, H * 0.98, 'rgba(255,255,255,0.6)', 13, ep);
+        gText(sA*sA + ' + ' + sB*sB + ' = ' + totalTiles, cx, H * 0.88, '#ffffff', 18, ep);
+        gText('\uC9C1\uAC01\uC0BC\uAC01\uD615\uC758 \uB450 \uC9E7\uC740 \uBCC0\uC5D0 \uC815\uC0AC\uAC01\uD615\uC744 \uADF8\uB9AC\uBA74', cx, H * 0.93, 'rgba(255,255,255,0.6)', 13, ep);
+        gText('\uADF8 \uB113\uC774\uC758 \uD569\uC740 \uBE57\uBCC0\uC758 \uC815\uC0AC\uAC01\uD615 \uB113\uC774\uC640 \uD56D\uC0C1 \uAC19\uB2E4', cx, H * 0.97, 'rgba(255,255,255,0.6)', 13, ep);
       }
       
       // 단계 텍스트 (상단)
