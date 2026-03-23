@@ -19,9 +19,8 @@ const HIGH_3D_TYPES = new Set([
   // 중등 3D (7개)
   'similarity_volume','sphere_volume','sphere_surface','cylinder_surface','cone_volume','cone_surface',
   // 고등 3D
-  'discriminant','sigma_notation',
-  'quad_inequality','abs_inequality','counting_h','permutation','combination','binomial_theorem',
-  'set_operation','proposition','function_h','composite_func','inverse_func','rational_func',
+  'discriminant',
+  'composite_func','inverse_func','rational_func',
   'irrational_func','arithmetic_seq','geometric_seq','arithmetic_sum','geometric_sum','induction',
   'exp_func','log_func','exp_log_eq','trig_func','trig_graph','trig_addition','sine_rule',
   'cosine_rule','vector_2d','dot_product','seq_limit','series','func_limit','continuity',
