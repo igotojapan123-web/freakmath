@@ -27,7 +27,7 @@ export default function FormulaSlider({ formula }: { formula: Formula }) {
       ))}
 
       <div style={{ background: '#05080f', borderRadius: '10px', overflow: 'hidden', marginBottom: '14px' }}>
-        <FormulaVizClient visualType={formula.visualType} values={vals} height={180} />
+        <FormulaVizClient visualType={formula.visualType} values={vals} height={500} forceCanvas2D />
       </div>
 
       <div style={{ background: '#05080f', border: '1px solid rgba(0,255,204,0.15)', borderRadius: '10px', padding: '14px', textAlign: 'center', fontFamily: 'JetBrains Mono, monospace', fontSize: '15px', color: 'var(--mint)' }}>

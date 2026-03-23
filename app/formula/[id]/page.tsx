@@ -149,7 +149,7 @@ export default async function FormulaPage({ params }: { params: Promise<{ id: st
             }}>
               <FormulaVizClient
                 visualType={formula.visualType}
-                height={240}
+                height={600}
               />
             </div>
           </div>

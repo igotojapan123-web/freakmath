@@ -25,13 +25,14 @@ interface Props {
   visualType: string
   values?: Record<string, number>
   height?: number
+  forceCanvas2D?: boolean
 }
 
-export default function FormulaVizClient({ visualType, values, height = 240 }: Props) {
+export default function FormulaVizClient({ visualType, values, height = 240, forceCanvas2D = false }: Props) {
   const [mounted, setMounted] = useState(false)
   const [Viz, setViz] = useState<any>(null)
 
-  const is3D = HIGH_3D_TYPES.has(visualType)
+  const is3D = !forceCanvas2D && HIGH_3D_TYPES.has(visualType)
 
   useEffect(() => {
     setMounted(true)

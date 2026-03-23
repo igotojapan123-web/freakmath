@@ -2279,8 +2279,12 @@ switch (type) {
     // ══════════════════════════════════════════
 
     case 'pythagoras_viz': {
-      const sA = 3, sB = 4, sC = 5;
-      const u = Math.min(W / 32, H / 28);
+      const sA = Math.max(1, Math.round(v('a', 3)));
+      const sB = Math.max(1, Math.round(v('b', 4)));
+      const sC = parseFloat((Math.sqrt(sA*sA + sB*sB)).toFixed(1));
+      const totalCells = sA*sA + sB*sB;
+      const maxSide = Math.max(sA, sB, Math.ceil(sC));
+      const u = Math.min(W / (maxSide * 4 + 10), H / (maxSide * 3 + 8));
 
       // 좌표 기준점
       const triCx = W * 0.48, triCy = H * 0.25;
@@ -2288,12 +2292,13 @@ switch (type) {
       const Bx = triCx + sB * u / 2, By = Ay;
       const Tx = Ax, Ty = Ay - sA * u;
 
+      const totalTiles = sA * sA + sB * sB;
+      const sCI = Math.ceil(sC);
+
       // 정사각형 위치
       const sqAox = Tx - sA * u - u * 1.0, sqAoy = Ty;
       const sqBox = Ax, sqBoy = Ay + u * 1.0;
-      const cDestX = W * 0.5 - sC * u / 2, cDestY = H * 0.58;
-      
-      const totalTiles = sA * sA + sB * sB; // 25
+      const cDestX = W * 0.5 - sCI * u / 2, cDestY = H * 0.58;
       
       // 부드러운 이징
       const eIO = (t: number) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3) / 2;
@@ -2435,16 +2440,16 @@ switch (type) {
         ctx.strokeStyle = '#D85A30';
         ctx.lineWidth = 1.5;
         ctx.setLineDash([5, 4]);
-        for (let r = 0; r < sC; r++) {
-          for (let c = 0; c < sC; c++) {
+        for (let r = 0; r < sCI; r++) {
+          for (let c2 = 0; c2 < sCI; c2++) {
             ctx.beginPath();
-            ctx.rect(cDestX + c * u + 3, cDestY + r * u + 3, u - 6, u - 6);
+            ctx.rect(cDestX + c2 * u + 3, cDestY + r * u + 3, u - 6, u - 6);
             ctx.stroke();
           }
         }
         ctx.setLineDash([]);
         ctx.restore();
-        gText('c² = ?칸', cDestX + sC * u / 2, cDestY - 12, '#D85A30', 15, eO(cFrameP));
+        gText('c² = ?', cDestX + sCI * u / 2, cDestY - 12, '#D85A30', 15, eO(cFrameP));
       }
       
       // === 칸 이동 애니메이션 ===
@@ -2456,7 +2461,7 @@ switch (type) {
         for (let r = 0; r < sA; r++) {
           for (let c = 0; c < sA; c++) {
             const fromX = sqAox + c * u, fromY = sqAoy + r * u;
-            const dr = Math.floor(tileIdx / sC), dc = tileIdx % sC;
+            const dr = Math.floor(tileIdx / sCI), dc = tileIdx % sCI;
             const toX = cDestX + dc * u, toY = cDestY + dr * u;
             const delay = tileIdx / totalTiles * 0.65;
             const t2 = cl((moveP - delay) / 0.25);
@@ -2487,7 +2492,7 @@ switch (type) {
         for (let r = 0; r < sB; r++) {
           for (let c = 0; c < sB; c++) {
             const fromX = sqBox + c * u, fromY = sqBoy + r * u;
-            const dr = Math.floor(tileIdx / sC), dc = tileIdx % sC;
+            const dr = Math.floor(tileIdx / sCI), dc = tileIdx % sCI;
             const toX = cDestX + dc * u, toY = cDestY + dr * u;
             const delay = tileIdx / totalTiles * 0.65;
             const t2 = cl((moveP - delay) / 0.25);
@@ -2527,7 +2532,7 @@ switch (type) {
         ctx.rect(cDestX - 3, cDestY - 3, sC * u + 6, sC * u + 6);
         ctx.stroke();
         ctx.restore();
-        gText('c² = 25칸', cDestX + sC * u / 2, cDestY + sC * u + 22, '#D85A30', 16, rp);
+        gText('c² = ' + totalTiles + '칸', cDestX + sCI * u / 2, cDestY + sC * u + 22, '#D85A30', 16, rp);
         
         // 은은한 빛남
         if (resultP > 0.5) {
@@ -2537,7 +2542,7 @@ switch (type) {
           ctx.globalAlpha = ga * 0.05 * pulse;
           ctx.fillStyle = '#D85A30';
           ctx.beginPath();
-          ctx.arc(cDestX + sC * u / 2, cDestY + sC * u / 2, sC * u * 0.65, 0, Math.PI * 2);
+          ctx.arc(cDestX + sCI * u / 2, cDestY + sC * u / 2, sC * u * 0.65, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
@@ -2554,13 +2559,13 @@ switch (type) {
       
       // 단계 텍스트 (상단)
       let stepTxt = '';
-      if (p < 0.12) stepTxt = '① 직각삼각형을 그린다';
-      else if (p < 0.20) stepTxt = '② 각 변의 길이';
-      else if (p < 0.30) stepTxt = '③ a² = 9칸';
-      else if (p < 0.42) stepTxt = '④ b² = 16칸';
-      else if (p < 0.48) stepTxt = '⑤ 빗변에 빈 틀을 놓는다';
-      else if (p < 0.78) stepTxt = '⑥ 9칸 + 16칸을 옮겨서 c²를 채운다';
-      else if (p < 0.90) stepTxt = '⑦ 딱 25칸 = c²';
+      if (p < 0.12) stepTxt = '\u2460 \uC9C1\uAC01\uC0BC\uAC01\uD615\uC744 \uADF8\uB9B0\uB2E4';
+      else if (p < 0.20) stepTxt = '\u2461 \uAC01 \uBCC0\uC758 \uAE38\uC774';
+      else if (p < 0.30) stepTxt = '\u2462 a\u00B2 = ' + (sA*sA) + '\uCE78';
+      else if (p < 0.42) stepTxt = '\u2463 b\u00B2 = ' + (sB*sB) + '\uCE78';
+      else if (p < 0.48) stepTxt = '\u2464 \uBE57\uBCC0\uC5D0 \uBE48 \uD2C0\uC744 \uB193\uB294\uB2E4';
+      else if (p < 0.78) stepTxt = '\u2465 ' + (sA*sA) + '\uCE78 + ' + (sB*sB) + '\uCE78\uC744 \uC62E\uACA8\uC11C c\u00B2\uB97C \uCC44\uC6B4\uB2E4';
+      else if (p < 0.90) stepTxt = '\u2466 \uB531 ' + totalTiles + '\uCE78 = c\u00B2';
       
       if (stepTxt) {
         ctx.save();
