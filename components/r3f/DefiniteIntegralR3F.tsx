@@ -296,105 +296,19 @@ function Floor() {
   )
 }
 
-// --- 메인 씬 ---
+// --- 메인 씬 (디버그 모드: 테스트 박스) ---
 function Scene() {
-  const [time, setTime] = useState(0)
-
-  useFrame((_, delta) => {
-    setTime(prev => prev + delta)
-  })
-
-  const phase = getPhase(time)
-
-  // 현재 어떤 막대 세트를 보여줄지
-  const showBars4 = ['bars4', 'count4'].includes(phase.name)
-  const showBars8 = ['bars8', 'count8'].includes(phase.name)
-  const showBars20 = ['bars20', 'count20', 'exact', 'hold'].includes(phase.name)
-
   return (
     <>
-      {/* 조명 */}
       <ambientLight intensity={0.5} />
-      <directionalLight
-        position={[6, 12, 8]}
-        intensity={0.9}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-10}
-        shadow-camera-right={10}
-        shadow-camera-top={10}
-        shadow-camera-bottom={-10}
-        shadow-radius={3}
-      />
-      <directionalLight position={[-4, 6, -4]} intensity={0.2} />
+      <directionalLight position={[5, 8, 5]} intensity={0.8} />
 
-      {/* 바닥 */}
-      <Floor />
-
-      {/* 좌표축 */}
-      <Axes phase={phase} />
-
-      {/* 곡선 */}
-      <Curve phase={phase} />
-
-      {/* 적분 구간 */}
-      <IntegralRange phase={phase} />
-
-      {/* 리만 합 막대 — 4개 */}
-      {showBars4 && (
-        <RiemannBars n={4} phase={phase} activePhase="bars4" color={TEAL} />
-      )}
-
-      {/* 리만 합 막대 — 8개 */}
-      {showBars8 && (
-        <RiemannBars n={8} phase={phase} activePhase="bars8" color={TEAL} />
-      )}
-
-      {/* 리만 합 막대 — 20개 */}
-      {showBars20 && (
-        <RiemannBars n={20} phase={phase} activePhase="bars20" color={TEAL} />
-      )}
-
-      {/* 넓이 라벨들 — 막대 오른쪽 위, 겹침 없는 고정 위치 */}
-      {phase.name === 'count4' && (
-        <Text position={[3.2, 3.5, 0.1]} fontSize={0.35} color={TEAL} anchorX="center">
-          {'4개 막대 ≈ 9.60'}
-        </Text>
-      )}
-      {phase.name === 'count8' && (
-        <Text position={[3.2, 3.5, 0.1]} fontSize={0.35} color={TEAL} anchorX="center">
-          {'8개 막대 ≈ 9.90'}
-        </Text>
-      )}
-      {(phase.name === 'count20' || phase.name === 'exact' || phase.name === 'hold') && (
-        <Text position={[3.2, 3.5, 0.1]} fontSize={0.35} color={TEAL} anchorX="center">
-          {'20개 막대 ≈ 10.13'}
-        </Text>
-      )}
-
-      {/* 정확한 넓이 */}
-      {(phase.name === 'exact' || phase.name === 'hold') && (
-        <group>
-          <Text position={[0, 4.2, 0.1]} fontSize={0.45} color={CORAL} anchorX="center" fontWeight="bold">
-            {'∫₁⁵ f(x)dx = 10.13'}
-          </Text>
-          <Text position={[0, 3.6, 0.1]} fontSize={0.28} color="#999999" anchorX="center">
-            {'막대를 무한히 쪼개면 → 정확한 넓이'}
-          </Text>
-        </group>
-      )}
-
-      {/* 카메라 컨트롤 */}
-      <OrbitControls
-        enableZoom={true}
-        enablePan={false}
-        autoRotate
-        autoRotateSpeed={0.5}
-        minPolarAngle={Math.PI / 6}
-        maxPolarAngle={Math.PI / 2.2}
-        minDistance={6}
-        maxDistance={18}
-      />
+      {/* 디버그: 테스트 박스 */}
+      <mesh position={[0, 1, 0]}>
+        <boxGeometry args={[2, 2, 2]} />
+        <meshStandardMaterial color="#534AB7" />
+      </mesh>
+      <gridHelper args={[10, 10, '#333', '#222']} />
     </>
   )
 }
