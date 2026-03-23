@@ -21,8 +21,8 @@ const HIGH_3D_TYPES = new Set([
   // 고등 3D
   'discriminant',
   'induction',
-  'exp_log_eq','trig_func','trig_graph','trig_addition','sine_rule',
-  'cosine_rule','vector_2d','dot_product','seq_limit','series','func_limit','continuity',
+  'trig_func',
+  'vector_2d',
   'derivative_coeff','derivative_func','diff_formula','diff_application','max_min','tangent_line',
   'indefinite_integral','definite_integral','area_integral','series_sum','fundamental_theorem',
   'prob_addition','conditional_prob','independence','discrete_rv','binomial_dist','normal_dist',
