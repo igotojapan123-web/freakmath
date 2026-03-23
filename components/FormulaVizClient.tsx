@@ -9,6 +9,7 @@ const DerivativeR3F = dynamic(() => import('@/components/r3f/DerivativeR3F'), { 
 const TrigFuncR3F = dynamic(() => import('@/components/r3f/TrigFuncR3F'), { ssr: false })
 const InductionR3F = dynamic(() => import('@/components/r3f/InductionR3F'), { ssr: false })
 const DiscriminantR3F = dynamic(() => import('@/components/r3f/DiscriminantR3F'), { ssr: false })
+const ConicSectionR3F = dynamic(() => import('@/components/r3f/ConicSectionR3F'), { ssr: false })
 
 // 고등 3D visualType 목록
 const HIGH_3D_TYPES = new Set([
@@ -82,6 +83,7 @@ export default function FormulaVizClient({ visualType, values, height = 240, for
   if (visualType === 'trig_func' && !forceCanvas2D) return <><TrigFuncR3F />{hint3D}</>
   if (visualType === 'induction' && !forceCanvas2D) return <><InductionR3F />{hint3D}</>
   if (visualType === 'discriminant' && !forceCanvas2D) return <><DiscriminantR3F />{hint3D}</>
+  if (visualType === 'conic_section' && !forceCanvas2D) return <><ConicSectionR3F />{hint3D}</>
 
   return (
     <>
