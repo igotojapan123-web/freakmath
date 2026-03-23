@@ -26,8 +26,7 @@ const HIGH_3D_TYPES = new Set([
   'derivative_coeff',
   'definite_integral','fundamental_theorem',
   'normal_dist',
-  'sampling_dist','confidence_interval','proportion_estimate','trig_identity','line_eq','circle_eq',
-  'transformation','conic_section','space_vector','exponent_viz','coordinate_plane','diff_rules',
+  'conic_section',
 ])
 
 interface Props {
