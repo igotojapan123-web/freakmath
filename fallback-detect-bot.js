@@ -156,7 +156,27 @@ function detectFallbackInBrowser() {
     }
   });
 
+  // 5. 한국어 텍스트 존재 여부 (Canvas 외부)
+  const pageText = document.body.innerText;
+  const hasKorean = /[가-힣]/.test(pageText);
+  const hasStep = /[①②③④⑤⑥⑦⑧⑨⑩]/.test(bodyText);
+  if (!hasKorean) {
+    issues.push({ type: 'NO_KOREAN_TEXT', severity: 'MEDIUM', message: '페이지에 한국어 텍스트 없음' });
+  }
+
   return issues;
+}
+
+// 애니메이션 움직임 감지 — 2초 간격 스크린샷 비교
+async function detectAnimationMovement(page) {
+  try {
+    const canvas = await page.$('canvas');
+    if (!canvas) return null;
+    const shot1 = await canvas.screenshot({ encoding: 'base64' });
+    await new Promise(r => setTimeout(r, 6000));
+    const shot2 = await canvas.screenshot({ encoding: 'base64' });
+    return shot1 !== shot2 ? 'ANIMATED' : 'STATIC';
+  } catch { return null; }
 }
 
 // 시각화 해시 — 모든 Canvas를 해시화해서 중복 감지
@@ -209,7 +229,7 @@ async function runFallbackBot() {
       const page = await browser.newPage();
       const url = `${BASE_URL}/formula/${id}`;
       await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-      await new Promise(r => setTimeout(r, 2000)); // 애니메이션 대기
+      await new Promise(r => setTimeout(r, 6000)); // 애니메이션 대기
 
       const pageIssues = await page.evaluate(detectFallbackInBrowser);
 

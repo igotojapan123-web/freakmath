@@ -45,7 +45,7 @@ export default function FormulaVizClient({ visualType, values, height = 240, for
 
   if (!mounted || !Viz) {
     return (
-      <div style={{
+      <div suppressHydrationWarning style={{
         height,
         display: 'flex',
         alignItems: 'center',

@@ -167,7 +167,7 @@ async function runMathBot() {
       const page = await browser.newPage();
       const url = `${BASE_URL}/formula/${id}`;
       await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise(r => setTimeout(r, 4000));
 
       const pageIssues = await page.evaluate(checkMathAccuracy);
 

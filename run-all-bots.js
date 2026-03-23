@@ -52,6 +52,18 @@ const BOTS = {
     report: 'qa-accessibility-report.json',
     description: '색상 대비, ARIA, 키보드, 수식 접근성',
   },
+  slider: {
+    name: '🎛️ 슬라이더',
+    script: 'slider-sync-bot.js',
+    report: 'qa-slider-report.json',
+    description: '슬라이더 조작 시 Canvas 변경 확인',
+  },
+  fallback: {
+    name: '🔍 Fallback',
+    script: 'fallback-detect-bot.js',
+    report: 'qa-fallback-report.json',
+    description: 'Fallback 시각화, 애니메이션 움직임, 한국어 여부',
+  },
 };
 
 function runBot(key, bot) {

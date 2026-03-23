@@ -1377,5 +1377,5 @@ export default function FormulaViz3D({ visualType, values = {}, height = 240 }: 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visualType, JSON.stringify(values), height])
 
-  return <div ref={containerRef} role="img" aria-label={`${visualType} 3D 시각화`} style={{ width: '100%', height, borderRadius: '12px', overflow: 'hidden' }} />
+  return <div ref={containerRef} role="img" aria-label={`${visualType} 3D 시각화`} suppressHydrationWarning style={{ width: '100%', height, borderRadius: '12px', overflow: 'hidden' }} />
 }

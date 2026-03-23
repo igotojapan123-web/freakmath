@@ -240,6 +240,47 @@ function detectIssuesInBrowser() {
     }
   });
 
+  // 11. 텍스트 겹침 감지 (같은 부모 안 겹침은 무시)
+  const textEls = document.querySelectorAll('h1,h2,h3,p');
+  const elRects = [];
+  textEls.forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0 && el.innerText.trim().length > 2) {
+      elRects.push({ rect: r, parent: el.parentElement });
+    }
+  });
+  let overlapCount = 0;
+  for (let i = 0; i < elRects.length; i++) {
+    for (let j = i + 1; j < elRects.length; j++) {
+      // 같은 부모면 정상 중첩 → 무시
+      if (elRects[i].parent === elRects[j].parent) continue;
+      const a = elRects[i].rect, b = elRects[j].rect;
+      if (a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top) {
+        const overlapArea = Math.max(0, Math.min(a.right,b.right)-Math.max(a.left,b.left)) * Math.max(0, Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
+        if (overlapArea > 2000) overlapCount++;
+      }
+    }
+  }
+  if (overlapCount > 3) {
+    issues.push({ type: 'TEXT_OVERLAP', severity: 'MEDIUM', message: `텍스트 겹침 ${overlapCount}건 감지` });
+  }
+
+  // 12. 시각화 영역 비정상 크기 감지
+  canvases.forEach((canvas, idx) => {
+    const r = canvas.getBoundingClientRect();
+    if (r.height > 0 && r.height < 200) {
+      issues.push({ type: 'CANVAS_TOO_SMALL', severity: 'LOW', message: `Canvas #${idx}: 높이 ${Math.round(r.height)}px (200px 미만)` });
+    }
+  });
+
+  // 13. Canvas 요소 잘림 감지 (가로 오버플로만 — 세로는 스크롤 정상)
+  canvases.forEach((canvas, idx) => {
+    const r = canvas.getBoundingClientRect();
+    if (r.right > window.innerWidth + 20) {
+      issues.push({ type: 'CANVAS_CLIPPED', severity: 'MEDIUM', message: `Canvas #${idx}: 가로로 viewport 밖 (${Math.round(r.right)}px > ${window.innerWidth}px)` });
+    }
+  });
+
   return issues;
 }
 
@@ -307,7 +348,7 @@ async function runQA() {
       });
 
       // Canvas 애니메이션이 그려질 시간 대기
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise(r => setTimeout(r, 6000));
 
       // 브라우저 내에서 문제 감지
       const pageIssues = await page.evaluate(detectIssuesInBrowser);
