@@ -3127,10 +3127,54 @@ switch (type) {
       break
     }
 
+    case 'discriminant': {
+      const da = v('a', 1), db = v('b', -4), dc = v('c', 3)
+      const D = db * db - 4 * da * dc
+      const scX = (W - 80) / 10, scY = (H - 80) / 10
+      const ox = cx, oy = cy + 20
+      // 좌표축
+      gLine(40, oy, W - 40, oy, 'rgba(255,255,255,0.2)', 1.5, p)
+      gLine(ox, 30, ox, H - 20, 'rgba(255,255,255,0.2)', 1.5, p)
+      gText('x', W - 30, oy - 12, '#666', 11, p)
+      gText('y', ox + 14, 35, '#666', 11, p)
+      // 포물선
+      ctx.save(); ctx.globalAlpha = p * 0.9; ctx.strokeStyle = PURPLE; ctx.lineWidth = 2.5
+      ctx.shadowBlur = 10; ctx.shadowColor = PURPLE; ctx.beginPath()
+      for (let i = -50; i <= 50; i++) {
+        const xv = i / 10
+        const yv = da * xv * xv + db * xv + dc
+        const sx = clx(ox + xv * scX), sy = cly(oy - yv * scY)
+        if (i === -50) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy)
+      }
+      ctx.stroke(); ctx.restore()
+      // 근 & 판별식 텍스트
+      if (D > 0) {
+        const sq = Math.sqrt(D)
+        const r1 = (-db - sq) / (2 * da), r2 = (-db + sq) / (2 * da)
+        // 교점 표시
+        ctx.save(); ctx.fillStyle = MINT; ctx.shadowBlur = 12; ctx.shadowColor = MINT; ctx.globalAlpha = p
+        ctx.beginPath(); ctx.arc(clx(ox + r1 * scX), oy, 6, 0, Math.PI * 2); ctx.fill()
+        ctx.beginPath(); ctx.arc(clx(ox + r2 * scX), oy, 6, 0, Math.PI * 2); ctx.fill()
+        ctx.restore()
+        gText(`D = ${r(D)} > 0, 근 2개`, cx, 24, MINT, 14, p)
+        gText(`x = ${r(r1)}, ${r(r2)}`, cx, 44, MINT, 12, p)
+      } else if (D === 0) {
+        const r1 = -db / (2 * da)
+        ctx.save(); ctx.fillStyle = PURPLE; ctx.shadowBlur = 12; ctx.shadowColor = PURPLE; ctx.globalAlpha = p
+        ctx.beginPath(); ctx.arc(clx(ox + r1 * scX), oy, 7, 0, Math.PI * 2); ctx.fill(); ctx.restore()
+        gText(`D = 0, 근 1개 (중근 x=${r(r1)})`, cx, 24, PURPLE, 14, p)
+      } else {
+        gText(`D = ${r(D)} < 0, 근 없음`, cx, 24, AMBER, 14, p)
+      }
+      // 계산 과정
+      gText(`D = b²-4ac = (${r(db)})²-4·${r(da)}·${r(dc)} = ${r(D)}`, cx, H - 18, '#999', 11, p)
+      break
+    }
+
     // 나머지 고등 케이스: 앰버 원 fallback
     case 'poly_add': case 'poly_mul_h': case 'expand_formula': case 'factor_h':
     case 'remainder_theorem': case 'factor_theorem': case 'complex_number':
-    case 'discriminant': case 'vieta': case 'quad_func_eq':
+    case 'vieta': case 'quad_func_eq':
     case 'higher_eq': case 'simul_quad': case 'quad_inequality':
     case 'abs_inequality': case 'counting_h': case 'permutation':
     case 'combination': case 'binomial_theorem': case 'set_operation':
