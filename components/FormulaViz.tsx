@@ -3189,12 +3189,41 @@ switch (type) {
     }
 
     case 'vector_2d': case 'dot_product': {
-      const sc7=30
-      gLine(30,cy,W-30,cy,'rgba(255,255,255,0.12)',1,p);gLine(cx,20,cx,H-20,'rgba(255,255,255,0.12)',1,p)
-      const vax=v('ax',3),vay=v('ay',2),vbx=v('bx',1),vby=v('by',3)
-      if(p>0.2){const vp=easeOutCubic((p-0.2)/0.4);gLine(cx,cy,cx+vax*sc7,cy-vay*sc7,MINT,3,vp);gText('\u20D7a',cx+vax*sc7+10,cy-vay*sc7,MINT,13,vp)}
-      if(p>0.4){const vp2=easeOutCubic((p-0.4)/0.4);gLine(cx,cy,cx+vbx*sc7,cy-vby*sc7,PURPLE,3,vp2);gText('\u20D7b',cx+vbx*sc7+10,cy-vby*sc7,PURPLE,13,vp2)}
-      if(p>0.65){const sp=easeOutCubic((p-0.65)/0.3);gLine(cx,cy,cx+(vax+vbx)*sc7,cy-(vay+vby)*sc7,AMBER,2.5,sp);gText('\u20D7a+\u20D7b',cx+(vax+vbx)*sc7+10,cy-(vay+vby)*sc7,AMBER,13,sp)}
+      const sc7 = 30
+      const vax = v('ax', 3), vay = v('ay', 2), vbx = v('bx', 1), vby = v('by', 3)
+      const sx = vax + vbx, sy = vay + vby
+      // 좌표축
+      gLine(30, cy, W - 30, cy, 'rgba(255,255,255,0.12)', 1, p)
+      gLine(cx, 20, cx, H - 20, 'rgba(255,255,255,0.12)', 1, p)
+      gText('x', W - 25, cy - 12, '#666', 11, p); gText('y', cx + 12, 25, '#666', 11, p)
+      // 벡터 a (초록)
+      gLine(cx, cy, cx + vax * sc7, cy - vay * sc7, MINT, 3, p)
+      gText(`a (${r(vax)}, ${r(vay)})`, cx + vax * sc7 + 15, cy - vay * sc7, MINT, 12, p)
+      // 벡터 b (보라)
+      gLine(cx, cy, cx + vbx * sc7, cy - vby * sc7, PURPLE, 3, p)
+      gText(`b (${r(vbx)}, ${r(vby)})`, cx + vbx * sc7 + 15, cy - vby * sc7, PURPLE, 12, p)
+      // 합 벡터 a+b (주황)
+      gLine(cx, cy, cx + sx * sc7, cy - sy * sc7, AMBER, 2.5, p)
+      gText(`a+b (${r(sx)}, ${r(sy)})`, cx + sx * sc7 + 15, cy - sy * sc7, AMBER, 12, p)
+      // 평행이동된 b 점선 (a끝→a+b)
+      ctx.save(); ctx.globalAlpha = p * 0.4; ctx.strokeStyle = PURPLE; ctx.lineWidth = 1.5
+      ctx.setLineDash([6, 4]); ctx.beginPath()
+      ctx.moveTo(cx + vax * sc7, cy - vay * sc7)
+      ctx.lineTo(cx + sx * sc7, cy - sy * sc7)
+      ctx.stroke(); ctx.restore()
+      // 화살표 머리 (간단 삼각형)
+      const drawHead = (ex: number, ey: number, dx: number, dy: number, col: string) => {
+        const len = Math.sqrt(dx * dx + dy * dy); if (len < 0.1) return
+        const nx = dx / len, ny = dy / len, sz = 8
+        ctx.save(); ctx.globalAlpha = p; ctx.fillStyle = col; ctx.beginPath()
+        ctx.moveTo(ex, ey)
+        ctx.lineTo(ex - nx * sz + ny * sz * 0.4, ey - ny * sz - nx * sz * 0.4)
+        ctx.lineTo(ex - nx * sz - ny * sz * 0.4, ey - ny * sz + nx * sz * 0.4)
+        ctx.closePath(); ctx.fill(); ctx.restore()
+      }
+      drawHead(cx + vax * sc7, cy - vay * sc7, vax * sc7, -vay * sc7, MINT)
+      drawHead(cx + vbx * sc7, cy - vby * sc7, vbx * sc7, -vby * sc7, PURPLE)
+      drawHead(cx + sx * sc7, cy - sy * sc7, sx * sc7, -sy * sc7, AMBER)
       break
     }
 
