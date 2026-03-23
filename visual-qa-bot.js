@@ -20,7 +20,7 @@ const path = require('path');
 // ============================================================
 // 설정
 // ============================================================
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'https://freakmath.vercel.app';
 const SCREENSHOT_DIR = './qa-screenshots';
 const REPORT_PATH = './qa-report.json';
 const VIEWPORT = { width: 1280, height: 900 };
@@ -37,7 +37,7 @@ function generateFormulaIds() {
     ids.push(`M${String(i).padStart(3, '0')}`);
   }
   // 고등 H001 ~ H070
-  for (let i = 1; i <= 70; i++) {
+  for (let i = 1; i <= 75; i++) {
     ids.push(`H${String(i).padStart(3, '0')}`);
   }
   return ids;

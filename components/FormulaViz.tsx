@@ -2280,18 +2280,18 @@ switch (type) {
 
     case 'pythagoras_viz': {
       const sA = 3, sB = 4, sC = 5;
-      const u = Math.min(W / 26, H / 22);
-      
+      const u = Math.min(W / 32, H / 28);
+
       // 좌표 기준점
-      const triCx = W * 0.48, triCy = H * 0.32;
+      const triCx = W * 0.48, triCy = H * 0.25;
       const Ax = triCx - sB * u / 2, Ay = triCy + sA * u / 2;
       const Bx = triCx + sB * u / 2, By = Ay;
       const Tx = Ax, Ty = Ay - sA * u;
-      
+
       // 정사각형 위치
-      const sqAox = Tx - sA * u - u * 0.5, sqAoy = Ty;
-      const sqBox = Ax, sqBoy = Ay + u * 0.5;
-      const cDestX = W * 0.5 - sC * u / 2, cDestY = H * 0.64;
+      const sqAox = Tx - sA * u - u * 1.0, sqAoy = Ty;
+      const sqBox = Ax, sqBoy = Ay + u * 1.0;
+      const cDestX = W * 0.5 - sC * u / 2, cDestY = H * 0.58;
       
       const totalTiles = sA * sA + sB * sB; // 25
       
@@ -2346,8 +2346,8 @@ switch (type) {
       const lblP = cl((p - 0.08) / 0.08);
       if (lblP > 0) {
         gText('a = ' + sA, sqAox + sA * u / 2, Ty - 14, '#534AB7', 18, eO(lblP));
-        gText('b = ' + sB, (Ax + Bx) / 2, sqBoy + sB * u + 22, '#1D9E75', 18, eO(lblP));
-        gText('c = ' + sC, Bx + (Tx - Bx) / 2 + 30, (By + Ty) / 2, '#D85A30', 18, eO(lblP));
+        gText('b = ' + sB, (Ax + Bx) / 2, sqBoy + sB * u + 28, '#1D9E75', 18, eO(lblP));
+        gText('c = ' + sC, Bx + (Tx - Bx) / 2 + 40, (By + Ty) / 2, '#D85A30', 18, eO(lblP));
       }
       
       // === a² 정사각형 + 격자 + 카운팅 ===

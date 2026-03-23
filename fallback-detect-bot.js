@@ -15,7 +15,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'https://freakmath.vercel.app';
 const SCREENSHOT_DIR = './qa-fallback-screenshots';
 const REPORT_PATH = './qa-fallback-report.json';
 
@@ -23,7 +23,7 @@ function generateFormulaIds() {
   const ids = [];
   for (let i = 1; i <= 50; i++) ids.push(`E${String(i).padStart(3, '0')}`);
   for (let i = 1; i <= 76; i++) ids.push(`M${String(i).padStart(3, '0')}`);
-  for (let i = 1; i <= 70; i++) ids.push(`H${String(i).padStart(3, '0')}`);
+  for (let i = 1; i <= 75; i++) ids.push(`H${String(i).padStart(3, '0')}`);
   return ids;
 }
 
