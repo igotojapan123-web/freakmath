@@ -345,7 +345,7 @@ function Scene() {
           {'8개 막대 ≈ 9.90'}
         </Text>
       )}
-      {(phase.name === 'count20' || phase.name === 'exact' || phase.name === 'hold') && (
+      {phase.name === 'count20' && (
         <Text position={[3.5, 4.2, 0.1]} fontSize={0.525} color={TEAL} anchorX="center">
           {'20개 막대 ≈ 10.13'}
         </Text>
@@ -354,9 +354,9 @@ function Scene() {
       {(phase.name === 'exact' || phase.name === 'hold') && (
         <group>
           <Text position={[0, 5, 0.1]} fontSize={0.675} color={CORAL} anchorX="center">
-            {'∫₁⁵ f(x)dx = 10.13'}
+            {'구간 [1, 5] 정적분 = 10.13'}
           </Text>
-          <Text position={[0, 4.3, 0.1]} fontSize={0.42} color="#999999" anchorX="center">
+          <Text position={[0, 3.8, 0.1]} fontSize={0.42} color="#999999" anchorX="center">
             {'막대를 무한히 쪼개면 → 정확한 넓이'}
           </Text>
         </group>
