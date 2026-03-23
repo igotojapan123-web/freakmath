@@ -7,6 +7,7 @@ const PythagorasR3F = dynamic(() => import('@/components/r3f/PythagorasR3F'), { 
 const DefiniteIntegralR3F = dynamic(() => import('@/components/r3f/DefiniteIntegralR3F'), { ssr: false })
 const DerivativeR3F = dynamic(() => import('@/components/r3f/DerivativeR3F'), { ssr: false })
 const TrigFuncR3F = dynamic(() => import('@/components/r3f/TrigFuncR3F'), { ssr: false })
+const InductionR3F = dynamic(() => import('@/components/r3f/InductionR3F'), { ssr: false })
 
 // 고등 3D visualType 목록
 const HIGH_3D_TYPES = new Set([
@@ -78,6 +79,7 @@ export default function FormulaVizClient({ visualType, values, height = 240, for
   if (visualType === 'definite_integral' && !forceCanvas2D) return <><DefiniteIntegralR3F />{hint3D}</>
   if (visualType === 'derivative_coeff' && !forceCanvas2D) return <><DerivativeR3F />{hint3D}</>
   if (visualType === 'trig_func' && !forceCanvas2D) return <><TrigFuncR3F />{hint3D}</>
+  if (visualType === 'induction' && !forceCanvas2D) return <><InductionR3F />{hint3D}</>
 
   return (
     <>
