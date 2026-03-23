@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 
-const PythagorasR3F = dynamic(() => import('@/components/PythagorasR3F'), { ssr: false })
+const PythagorasR3F = dynamic(() => import('@/components/r3f/PythagorasR3F'), { ssr: false })
 
 // 고등 3D visualType 목록
 const HIGH_3D_TYPES = new Set([
