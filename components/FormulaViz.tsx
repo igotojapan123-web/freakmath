@@ -2279,11 +2279,12 @@ switch (type) {
     // ══════════════════════════════════════════
 
     case 'pythagoras_viz': {
-      const sA = Math.max(1, Math.round(v('a', 3)));
-      const sB = Math.max(1, Math.round(v('b', 4)));
+      const sA = Math.max(0.5, parseFloat((v('a', 3)).toFixed(1)));
+      const sB = Math.max(0.5, parseFloat((v('b', 4)).toFixed(1)));
       const sC = parseFloat((Math.sqrt(sA*sA + sB*sB)).toFixed(1));
-      const totalCells = sA*sA + sB*sB;
-      const maxSide = Math.max(sA, sB, Math.ceil(sC));
+      const gridA = Math.ceil(sA), gridB = Math.ceil(sB);
+      const totalCells = gridA*gridA + gridB*gridB;
+      const maxSide = Math.max(gridA, gridB, Math.ceil(sC));
       const u = Math.min(W / (maxSide * 4 + 10), H / (maxSide * 3 + 8));
 
       // 좌표 기준점 — 왼쪽에 삼각형, 오른쪽에 c²
@@ -2369,7 +2370,7 @@ switch (type) {
         // 격자
         ctx.globalAlpha = sa * 0.15;
         ctx.lineWidth = 0.5;
-        for (let i = 1; i < sA; i++) {
+        for (let i = 1; i < gridA; i++) {
           ctx.beginPath(); ctx.moveTo(sqAox + i * u, sqAoy); ctx.lineTo(sqAox + i * u, sqAoy + ss); ctx.stroke();
           ctx.beginPath(); ctx.moveTo(sqAox, sqAoy + i * u); ctx.lineTo(sqAox + ss, sqAoy + i * u); ctx.stroke();
         }
@@ -2379,10 +2380,10 @@ switch (type) {
       // a² 칸 카운팅
       const cntAp = cl((p - 0.24) / 0.06);
       if (cntAp > 0) {
-        for (let idx = 0; idx < sA * sA; idx++) {
-          const row = Math.floor(idx / sA), col = idx % sA;
+        for (let idx = 0; idx < gridA * gridA; idx++) {
+          const row = Math.floor(idx / gridA), col = idx % gridA;
           const cx2 = sqAox + col * u + u / 2, cy2 = sqAoy + row * u + u / 2;
-          const dl = idx / (sA * sA);
+          const dl = idx / (gridA * gridA);
           const t2 = cl((cntAp - dl * 0.55) / 0.45);
           if (t2 <= 0) continue;
           const sc = eO(t2);
@@ -2390,7 +2391,7 @@ switch (type) {
           gText(String(idx + 1), cx2, cy2 + 1, '#ffffff', u * 0.28, sc * 0.9);
         }
         if (cntAp > 0.8) {
-          gText('a² = ' + sA * sA + '칸', sqAox + sA * u / 2, sqAoy + sA * u + 18, '#534AB7', 14, cl((cntAp - 0.8) / 0.2));
+          gText('a00B2 = ' + gridA * gridA + 'CE78', sqAox + sA * u / 2, sqAoy + sA * u + 18, '#534AB7', 14, cl((cntAp - 0.8) / 0.2));
         }
       }
       
@@ -2407,7 +2408,7 @@ switch (type) {
         ctx.beginPath(); ctx.rect(sqBox, sqBoy, ss2, ss2); ctx.fill(); ctx.stroke();
         ctx.globalAlpha = sb2 * 0.15;
         ctx.lineWidth = 0.5;
-        for (let i = 1; i < sB; i++) {
+        for (let i = 1; i < gridB; i++) {
           ctx.beginPath(); ctx.moveTo(sqBox + i * u, sqBoy); ctx.lineTo(sqBox + i * u, sqBoy + ss2); ctx.stroke();
           ctx.beginPath(); ctx.moveTo(sqBox, sqBoy + i * u); ctx.lineTo(sqBox + ss2, sqBoy + i * u); ctx.stroke();
         }
@@ -2417,10 +2418,10 @@ switch (type) {
       // b² 칸 카운팅
       const cntBp = cl((p - 0.35) / 0.07);
       if (cntBp > 0) {
-        for (let idx = 0; idx < sB * sB; idx++) {
-          const row = Math.floor(idx / sB), col = idx % sB;
+        for (let idx = 0; idx < gridB * gridB; idx++) {
+          const row = Math.floor(idx / gridB), col = idx % gridB;
           const cx2 = sqBox + col * u + u / 2, cy2 = sqBoy + row * u + u / 2;
-          const dl = idx / (sB * sB);
+          const dl = idx / (gridB * gridB);
           const t2 = cl((cntBp - dl * 0.55) / 0.45);
           if (t2 <= 0) continue;
           const sc = eO(t2);
@@ -2428,7 +2429,7 @@ switch (type) {
           gText(String(idx + 1), cx2, cy2 + 1, '#ffffff', u * 0.28, sc * 0.9);
         }
         if (cntBp > 0.8) {
-          gText('b² = ' + sB * sB + '칸', sqBox + sB * u / 2, sqBoy + sB * u + 18, '#1D9E75', 14, cl((cntBp - 0.8) / 0.2));
+          gText('b00B2 = ' + gridB * gridB + 'CE78', sqBox + sB * u / 2, sqBoy + sB * u + 18, '#1D9E75', 14, cl((cntBp - 0.8) / 0.2));
         }
       }
       
@@ -2458,8 +2459,8 @@ switch (type) {
         let tileIdx = 0;
         
         // a² 타일 이동
-        for (let r = 0; r < sA; r++) {
-          for (let c = 0; c < sA; c++) {
+        for (let r = 0; r < gridA; r++) {
+          for (let c = 0; c < gridA; c++) {
             const fromX = sqAox + c * u, fromY = sqAoy + r * u;
             const dr = Math.floor(tileIdx / sCI), dc = tileIdx % sCI;
             const toX = cDestX + dc * u, toY = cDestY + dr * u;
@@ -2489,8 +2490,8 @@ switch (type) {
         }
         
         // b² 타일 이동
-        for (let r = 0; r < sB; r++) {
-          for (let c = 0; c < sB; c++) {
+        for (let r = 0; r < gridB; r++) {
+          for (let c = 0; c < gridB; c++) {
             const fromX = sqBox + c * u, fromY = sqBoy + r * u;
             const dr = Math.floor(tileIdx / sCI), dc = tileIdx % sCI;
             const toX = cDestX + dc * u, toY = cDestY + dr * u;
