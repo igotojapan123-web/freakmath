@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 
 const PythagorasR3F = dynamic(() => import('@/components/r3f/PythagorasR3F'), { ssr: false })
+const DefiniteIntegralR3F = dynamic(() => import('@/components/r3f/DefiniteIntegralR3F'), { ssr: false })
 
 // 고등 3D visualType 목록
 const HIGH_3D_TYPES = new Set([
@@ -64,10 +65,9 @@ export default function FormulaVizClient({ visualType, values, height = 240, for
     )
   }
 
-  // 피타고라스: R3F 전용 컴포넌트
-  if (visualType === 'pythagoras_viz' && !forceCanvas2D) {
-    return <PythagorasR3F />
-  }
+  // R3F 전용 컴포넌트
+  if (visualType === 'pythagoras_viz' && !forceCanvas2D) return <PythagorasR3F />
+  if (visualType === 'definite_integral' && !forceCanvas2D) return <DefiniteIntegralR3F />
 
   return <Viz visualType={visualType} values={values} height={height} />
 }
