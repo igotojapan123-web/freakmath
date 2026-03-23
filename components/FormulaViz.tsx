@@ -3102,7 +3102,7 @@ switch (type) {
       break
     }
 
-    case 'derivative_coeff': case 'derivative_func': case 'diff_formula': case 'diff_application': case 'max_min': case 'tangent_line': {
+    case 'derivative_coeff': {
       const sc4 = 35, scY = 20, baseY = cy + 40
       const tx = v('x', 2.5)
       // f(x) = 0.15x³ - 0.8x² + 1.5x + 1 (R3F와 같은 함수)
@@ -3175,7 +3175,7 @@ switch (type) {
       break
     }
 
-    case 'definite_integral': case 'indefinite_integral': case 'area_integral': case 'velocity_integral': {
+    case 'definite_integral': case 'velocity_integral': {
       const sc5=35,scY2=20,baseY2=cy+40
       const iLow=v('a',0),iHigh=v('b',2)
       gLine(30,baseY2,W-30,baseY2,'rgba(255,255,255,0.12)',1,p);gLine(cx,20,cx,H-20,'rgba(255,255,255,0.12)',1,p)
@@ -4729,6 +4729,392 @@ switch (type) {
       break
     }
 
+    // ══════════════════════════════════════════
+    // H046~H060 — 미적분·확률 Canvas 2D
+    // ══════════════════════════════════════════
+
+    case 'derivative_func': {
+      const dfx = v('x', 2)
+      const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
+      const sc = 35, scY = 18, baseY = cy + 30
+      const fDf = (x: number) => 0.15*x*x*x - 0.8*x*x + 1.5*x + 1
+      const fDfP = (x: number) => 0.45*x*x - 1.6*x + 1.5
+      gLine(30, baseY, W - 30, baseY, 'rgba(255,255,255,0.12)', 1, p); gLine(cx, 30, cx, H - 20, 'rgba(255,255,255,0.12)', 1, p)
+      // ① f(x) 곡선
+      if (p > 0.02) {
+        const t = easeOutCubic(Math.min(1, (p - 0.02) / 0.2))
+        gText('① f(x) 곡선', cx, 22, VIO, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = VIO; ctx.lineWidth = 2.5; ctx.shadowBlur = 8; ctx.shadowColor = VIO; ctx.beginPath()
+        let s = false; for (let x = -1; x <= 6; x += 0.05) { const y = fDf(x); const sx = cx + (x - 2.5) * sc, sy = baseY - y * scY; if (sy < 25 || sy > H - 20) { s = false; continue }; if (!s) { ctx.moveTo(sx, sy); s = true } else ctx.lineTo(sx, sy) }; ctx.stroke(); ctx.restore()
+      }
+      // ② 접선 기울기 점들 → f'(x) 곡선
+      if (p > 0.3) {
+        const t = easeOutCubic(Math.min(1, (p - 0.3) / 0.35))
+        gText('② 기울기 → f\'(x) 곡선', cx, 22, GRN, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = GRN; ctx.lineWidth = 2; ctx.shadowBlur = 8; ctx.shadowColor = GRN; ctx.beginPath()
+        const pts = Math.floor(t * 50)
+        let s2 = false; for (let i = 0; i <= pts; i++) { const x = -1 + i * 7 / 50; const y = fDfP(x); const sx = cx + (x - 2.5) * sc, sy = baseY - y * scY; if (sy < 25 || sy > H - 20) { s2 = false; continue }; if (!s2) { ctx.moveTo(sx, sy); s2 = true } else ctx.lineTo(sx, sy) }; ctx.stroke(); ctx.restore()
+        gText("f'(x)", W - 50, 50, GRN, 12, t)
+      }
+      // ④
+      if (p > 0.78) { const t = easeOutCubic(Math.min(1, (p - 0.78) / 0.18)); gText('모든 점의 순간 변화율을 모은 함수', cx, H - 22, MINT, 14, t) }
+      break
+    }
+
+    case 'diff_formula': {
+      const dfn = Math.max(1, Math.min(6, Math.round(v('n', 3))))
+      const VIO = '#534AB7', GRN = '#1D9E75'
+      const sc = 35, scY = 15, baseY = cy + 30
+      gLine(30, baseY, W - 30, baseY, 'rgba(255,255,255,0.12)', 1, p); gLine(cx, 30, cx, H - 20, 'rgba(255,255,255,0.12)', 1, p)
+      // ① 원래 곡선
+      if (p > 0.02) {
+        const t = easeOutCubic(Math.min(1, (p - 0.02) / 0.25))
+        gText(`① y = x의 ${dfn}승`, cx, 22, VIO, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = VIO; ctx.lineWidth = 2.5; ctx.shadowBlur = 8; ctx.shadowColor = VIO; ctx.beginPath()
+        let s = false; for (let x = -2; x <= 3; x += 0.05) { const y = Math.pow(x, dfn); const sx = cx + x * sc, sy = baseY - y * scY; if (sy < 25 || sy > H - 20) { s = false; continue }; if (!s) { ctx.moveTo(sx, sy); s = true } else ctx.lineTo(sx, sy) }; ctx.stroke(); ctx.restore()
+      }
+      // ③ 도함수
+      if (p > 0.35) {
+        const t = easeOutCubic(Math.min(1, (p - 0.35) / 0.3))
+        gText(`③ y' = ${dfn}x의 ${dfn - 1}승`, cx, 22, GRN, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = GRN; ctx.lineWidth = 2; ctx.shadowBlur = 8; ctx.shadowColor = GRN; ctx.beginPath()
+        let s = false; for (let x = -2; x <= 3; x += 0.05) { const y = dfn * Math.pow(x, dfn - 1); const sx = cx + x * sc, sy = baseY - y * scY; if (sy < 25 || sy > H - 20) { s = false; continue }; if (!s) { ctx.moveTo(sx, sy); s = true } else ctx.lineTo(sx, sy) }; ctx.stroke(); ctx.restore()
+      }
+      // ④
+      if (p > 0.75) { const t = easeOutCubic(Math.min(1, (p - 0.75) / 0.2)); gText(`(x의n승)' = n·x의(n-1)승`, cx, H - 22, MINT, 14, t) }
+      break
+    }
+
+    case 'diff_application': {
+      const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
+      const sc = 35, scY = 15, baseY = cy + 30
+      const daF = (x: number) => -0.2 * x * x * x + 1.2 * x * x - 1.5 * x + 2
+      const daFp = (x: number) => -0.6 * x * x + 2.4 * x - 1.5
+      gLine(30, baseY, W - 30, baseY, 'rgba(255,255,255,0.12)', 1, p); gLine(cx, 30, cx, H - 20, 'rgba(255,255,255,0.12)', 1, p)
+      // ① f(x) + f'(x)
+      if (p > 0.02) {
+        const t = easeOutCubic(Math.min(1, (p - 0.02) / 0.25))
+        gText('① f(x)와 f\'(x)', cx, 22, VIO, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = VIO; ctx.lineWidth = 2.5; ctx.beginPath()
+        let s = false; for (let x = -1; x <= 5; x += 0.05) { const y = daF(x); const sx = cx + (x - 2) * sc, sy = baseY - y * scY; if (sy < 20 || sy > H - 15) { s = false; continue }; if (!s) { ctx.moveTo(sx, sy); s = true } else ctx.lineTo(sx, sy) }; ctx.stroke(); ctx.restore()
+        ctx.save(); ctx.globalAlpha = t * 0.7; ctx.strokeStyle = GRN; ctx.lineWidth = 2; ctx.setLineDash([5, 3]); ctx.beginPath()
+        let s2 = false; for (let x = -1; x <= 5; x += 0.05) { const y = daFp(x); const sx = cx + (x - 2) * sc, sy = baseY - y * scY; if (sy < 20 || sy > H - 15) { s2 = false; continue }; if (!s2) { ctx.moveTo(sx, sy); s2 = true } else ctx.lineTo(sx, sy) }; ctx.stroke(); ctx.restore()
+        gText("f(x)", W - 50, 40, VIO, 12, t); gText("f'(x)", W - 50, 56, GRN, 12, t)
+      }
+      // ② 증가/감소 영역
+      if (p > 0.35) {
+        const t = easeOutCubic(Math.min(1, (p - 0.35) / 0.25))
+        for (let x = -1; x <= 5; x += 0.2) { const fp = daFp(x); const sx = cx + (x - 2) * sc; if (sx < 30 || sx > W - 30) continue; ctx.save(); ctx.globalAlpha = t * 0.15; ctx.fillStyle = fp > 0 ? VIO : ORG; ctx.fillRect(sx, baseY - 60, 7, 120); ctx.restore() }
+      }
+      // ④ 극값
+      if (p > 0.65) {
+        const t = easeOutCubic(Math.min(1, (p - 0.65) / 0.2))
+        // f'(x)=0 근 약 0.77, 3.23
+        const r1 = 0.77, r2 = 3.23
+        gCircle(cx + (r1 - 2) * sc, baseY - daF(r1) * scY, 6, ORG, true, t); gText('극소', cx + (r1 - 2) * sc, baseY - daF(r1) * scY - 16, ORG, 12, t)
+        gCircle(cx + (r2 - 2) * sc, baseY - daF(r2) * scY, 6, ORG, true, t); gText('극대', cx + (r2 - 2) * sc, baseY - daF(r2) * scY - 16, ORG, 12, t)
+      }
+      if (p > 0.82) { const t = easeOutCubic(Math.min(1, (p - 0.82) / 0.15)); gText("f'(x)=0이면 극값", cx, H - 22, MINT, 14, t) }
+      break
+    }
+
+    case 'max_min': {
+      const mma = v('a', 0), mmb = v('b', 4)
+      const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
+      const sc = 35, scY = 15, baseY = cy + 30
+      const mmF = (x: number) => -0.2 * x * x * x + 1.2 * x * x - 1.5 * x + 2
+      gLine(30, baseY, W - 30, baseY, 'rgba(255,255,255,0.12)', 1, p); gLine(cx, 30, cx, H - 20, 'rgba(255,255,255,0.12)', 1, p)
+      // ① 곡선 + 구간
+      if (p > 0.02) {
+        const t = easeOutCubic(Math.min(1, (p - 0.02) / 0.25))
+        gText(`① 구간 [${r(mma)}, ${r(mmb)}]`, cx, 22, VIO, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = VIO; ctx.lineWidth = 2.5; ctx.beginPath()
+        let s = false; for (let x = mma - 0.5; x <= mmb + 0.5; x += 0.05) { const y = mmF(x); const sx = cx + (x - 2) * sc, sy = baseY - y * scY; if (sy < 25 || sy > H - 20) { s = false; continue }; if (!s) { ctx.moveTo(sx, sy); s = true } else ctx.lineTo(sx, sy) }; ctx.stroke(); ctx.restore()
+        gLine(cx + (mma - 2) * sc, baseY + 5, cx + (mma - 2) * sc, baseY - 5, ORG, 2, t)
+        gLine(cx + (mmb - 2) * sc, baseY + 5, cx + (mmb - 2) * sc, baseY - 5, ORG, 2, t)
+      }
+      // ② 극값 + 끝점
+      if (p > 0.35) {
+        const t = easeOutCubic(Math.min(1, (p - 0.35) / 0.3))
+        const pts = [mma, 0.77, 3.23, mmb].filter(x => x >= mma && x <= mmb)
+        let maxV = -Infinity, minV = Infinity, maxX = mma, minX = mma
+        pts.forEach(x => { const y = mmF(x); if (y > maxV) { maxV = y; maxX = x }; if (y < minV) { minV = y; minX = x } })
+        gCircle(cx + (maxX - 2) * sc, baseY - maxV * scY, 7, GRN, true, t); gText('최대', cx + (maxX - 2) * sc + 15, baseY - maxV * scY - 10, GRN, 13, t)
+        gCircle(cx + (minX - 2) * sc, baseY - minV * scY, 7, ORG, true, t); gText('최소', cx + (minX - 2) * sc + 15, baseY - minV * scY + 16, ORG, 13, t)
+      }
+      if (p > 0.75) { const t = easeOutCubic(Math.min(1, (p - 0.75) / 0.2)); gText('극값과 끝점 중 최대·최소 비교', cx, H - 22, MINT, 14, t) }
+      break
+    }
+
+    case 'tangent_line': {
+      const tla = v('a', 2)
+      const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
+      const sc = 35, scY = 18, baseY = cy + 30
+      const tlF = (x: number) => 0.15*x*x*x - 0.8*x*x + 1.5*x + 1
+      const tlFp = (x: number) => 0.45*x*x - 1.6*x + 1.5
+      gLine(30, baseY, W - 30, baseY, 'rgba(255,255,255,0.12)', 1, p); gLine(cx, 30, cx, H - 20, 'rgba(255,255,255,0.12)', 1, p)
+      // ① 곡선 + 점
+      if (p > 0.02) {
+        const t = easeOutCubic(Math.min(1, (p - 0.02) / 0.2))
+        gText('① 곡선 위의 점', cx, 22, VIO, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = VIO; ctx.lineWidth = 2.5; ctx.beginPath()
+        let s = false; for (let x = -1; x <= 6; x += 0.05) { const y = tlF(x); const sx = cx + (x - 2.5) * sc, sy = baseY - y * scY; if (sy < 25 || sy > H - 20) { s = false; continue }; if (!s) { ctx.moveTo(sx, sy); s = true } else ctx.lineTo(sx, sy) }; ctx.stroke(); ctx.restore()
+        const px = cx + (tla - 2.5) * sc, py = baseY - tlF(tla) * scY
+        gCircle(px, py, 6, ORG, true, t)
+      }
+      // ② 접선
+      if (p > 0.3) {
+        const t = easeOutCubic(Math.min(1, (p - 0.3) / 0.25))
+        gText('② 접선', cx, 22, GRN, 14, t)
+        const slope = tlFp(tla), px = cx + (tla - 2.5) * sc, py = baseY - tlF(tla) * scY
+        ctx.save(); ctx.globalAlpha = t * 0.7; ctx.strokeStyle = GRN; ctx.lineWidth = 2; ctx.shadowBlur = 8; ctx.shadowColor = GRN; ctx.beginPath()
+        ctx.moveTo(px - 80, py + slope * 80 * scY / sc); ctx.lineTo(px + 80, py - slope * 80 * scY / sc); ctx.stroke(); ctx.restore()
+      }
+      // ③ 수식
+      if (p > 0.6) {
+        const t = easeOutCubic(Math.min(1, (p - 0.6) / 0.2))
+        gText(`기울기 = f'(${r(tla)}) = ${r(tlFp(tla))}`, cx, cy - 55, ORG, 14, t)
+      }
+      if (p > 0.78) { const t = easeOutCubic(Math.min(1, (p - 0.78) / 0.18)); gText('y - f(a) = f\'(a)(x - a)', cx, H - 22, MINT, 14, t) }
+      break
+    }
+
+    case 'indefinite_integral': {
+      const iiC = v('C', 0)
+      const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
+      const sc = 35, scY = 12, baseY = cy + 20
+      const iiF = (x: number, c: number) => 0.15*x*x*x - 0.8*x*x + 1.5*x + 1 + c
+      gLine(30, baseY, W - 30, baseY, 'rgba(255,255,255,0.12)', 1, p); gLine(cx, 30, cx, H - 20, 'rgba(255,255,255,0.12)', 1, p)
+      // ① f(x)+C 여러 곡선
+      if (p > 0.02) {
+        const t = easeOutCubic(Math.min(1, (p - 0.02) / 0.3))
+        gText('① f(x) + C 곡선들', cx, 22, VIO, 14, t)
+        for (const c of [-2, -1, 0, 1, 2]) {
+          const col = c === Math.round(iiC) ? GRN : (c === 0 ? VIO : 'rgba(255,255,255,0.2)')
+          const lw = c === Math.round(iiC) ? 2.5 : 1.5
+          ctx.save(); ctx.globalAlpha = t * (c === Math.round(iiC) ? 1 : 0.4); ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath()
+          let s = false; for (let x = -1; x <= 6; x += 0.05) { const y = iiF(x, c); const sx = cx + (x - 2.5) * sc, sy = baseY - y * scY; if (sy < 20 || sy > H - 15) { s = false; continue }; if (!s) { ctx.moveTo(sx, sy); s = true } else ctx.lineTo(sx, sy) }; ctx.stroke(); ctx.restore()
+        }
+      }
+      // ② C 표시
+      if (p > 0.4) {
+        const t = easeOutCubic(Math.min(1, (p - 0.4) / 0.2))
+        gText(`C = ${r(iiC)}`, W - 60, 50, GRN, 14, t)
+      }
+      if (p > 0.7) { const t = easeOutCubic(Math.min(1, (p - 0.7) / 0.2)); gText('미분의 역과정, C는 자유', cx, H - 22, MINT, 14, t) }
+      break
+    }
+
+    case 'area_integral': {
+      const aia = v('a', 0), aib = v('b', 3)
+      const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
+      const sc = 35, scY = 15, baseY = cy + 30
+      const aiF = (x: number) => -0.15 * x * x + 1.5 * x + 0.5
+      const aiG = (x: number) => 0.2 * x + 0.3
+      gLine(30, baseY, W - 30, baseY, 'rgba(255,255,255,0.12)', 1, p); gLine(cx, 30, cx, H - 20, 'rgba(255,255,255,0.12)', 1, p)
+      // ① 두 곡선
+      if (p > 0.02) {
+        const t = easeOutCubic(Math.min(1, (p - 0.02) / 0.25))
+        gText('① 두 곡선', cx, 22, VIO, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = VIO; ctx.lineWidth = 2.5; ctx.beginPath()
+        for (let x = -1; x <= 5; x += 0.05) { const sx = cx + (x - 1.5) * sc, sy = baseY - aiF(x) * scY; if (sy < 20 || sy > H - 15) continue; if (x === -1) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy) }; ctx.stroke()
+        ctx.strokeStyle = GRN; ctx.lineWidth = 2; ctx.beginPath()
+        for (let x = -1; x <= 5; x += 0.05) { const sx = cx + (x - 1.5) * sc, sy = baseY - aiG(x) * scY; if (x === -1) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy) }; ctx.stroke(); ctx.restore()
+      }
+      // ② 영역 채움
+      if (p > 0.35) {
+        const t = easeOutCubic(Math.min(1, (p - 0.35) / 0.25))
+        gText('② 영역 채우기', cx, 22, ORG, 14, t)
+        ctx.save(); ctx.globalAlpha = t * 0.25; ctx.fillStyle = ORG; ctx.beginPath()
+        ctx.moveTo(cx + (aia - 1.5) * sc, baseY - aiG(aia) * scY)
+        for (let x = aia; x <= aib; x += 0.05) ctx.lineTo(cx + (x - 1.5) * sc, baseY - aiF(x) * scY)
+        for (let x = aib; x >= aia; x -= 0.05) ctx.lineTo(cx + (x - 1.5) * sc, baseY - aiG(x) * scY)
+        ctx.closePath(); ctx.fill(); ctx.restore()
+      }
+      // ③ 넓이
+      if (p > 0.7) {
+        const t = easeOutCubic(Math.min(1, (p - 0.7) / 0.2))
+        // 수치 적분
+        let area = 0; const dx = 0.01; for (let x = aia; x <= aib; x += dx) area += (aiF(x) - aiG(x)) * dx
+        gText(`넓이 = ${r(Math.abs(area))}`, cx, H - 22, MINT, 16, t)
+      }
+      break
+    }
+
+    case 'series_sum': {
+      const ssn = Math.max(2, Math.min(8, Math.round(v('n', 5))))
+      const VIO = '#534AB7', GRN = '#1D9E75'
+      const barW = Math.min(40, (W - 60) / ssn - 4), maxBH = H - 90, baseY = H - 35
+      const ox = cx - ssn * (barW + 4) / 2
+      for (let i = 1; i <= ssn; i++) {
+        const val = i * i, maxVal = ssn * ssn, bh = (val / maxVal) * maxBH * 0.6
+        const delay = 0.02 + (i - 1) * (0.4 / ssn)
+        if (p < delay) continue
+        const t = easeOutCubic(Math.min(1, (p - delay) / 0.12))
+        const x = ox + (i - 1) * (barW + 4)
+        ctx.save(); ctx.globalAlpha = t * 0.5; ctx.fillStyle = VIO; ctx.fillRect(x, baseY - bh * t, barW, bh * t); ctx.restore()
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = VIO; ctx.lineWidth = 1.5; ctx.strokeRect(x, baseY - bh * t, barW, bh * t); ctx.restore()
+        gText(`${val}`, x + barW / 2, baseY + 14, 'rgba(255,255,255,0.5)', 10, t)
+      }
+      if (p > 0.05) gText('① 제곱수의 합', cx, 22, VIO, 14, easeOutCubic(Math.min(1, (p - 0.05) / 0.1)))
+      if (p > 0.6) {
+        const t = easeOutCubic(Math.min(1, (p - 0.6) / 0.15))
+        const total = ssn * (ssn + 1) * (2 * ssn + 1) / 6
+        gText(`공식: n(n+1)(2n+1)/6 = ${total}`, cx, baseY + 35, MINT, 15, t)
+      }
+      break
+    }
+
+    case 'prob_addition': {
+      const ppa = v('pa', 0.4), ppb = v('pb', 0.3), ppab = Math.min(ppa, ppb, v('pab', 0.1))
+      const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
+      const rr = Math.min(60, Math.min(W, H) / 4), d = rr * 0.6
+      const ax = cx - d / 2, bx = cx + d / 2
+      // ① 벤 다이어그램
+      if (p > 0.02) {
+        const t = easeOutCubic(Math.min(1, (p - 0.02) / 0.2))
+        gText('① 벤 다이어그램', cx, 22, WHITE, 14, t)
+        gCircle(ax, cy, rr, VIO, false, t); gCircle(bx, cy, rr, GRN, false, t)
+        gText(`P(A)=${r(ppa)}`, ax - rr / 2, cy - rr - 10, VIO, 13, t)
+        gText(`P(B)=${r(ppb)}`, bx + rr / 2, cy - rr - 10, GRN, 13, t)
+      }
+      // ② 채우기
+      if (p > 0.3) {
+        const t = easeOutCubic(Math.min(1, (p - 0.3) / 0.25))
+        ctx.save(); ctx.globalAlpha = t * 0.2; ctx.fillStyle = VIO; ctx.beginPath(); ctx.arc(ax, cy, rr, 0, Math.PI * 2); ctx.fill()
+        ctx.fillStyle = GRN; ctx.beginPath(); ctx.arc(bx, cy, rr, 0, Math.PI * 2); ctx.fill(); ctx.restore()
+        gText(`교집합=${r(ppab)}`, cx, cy, ORG, 13, t)
+      }
+      // ③ 수식
+      if (p > 0.6) {
+        const t = easeOutCubic(Math.min(1, (p - 0.6) / 0.2))
+        const pUnion = ppa + ppb - ppab
+        gText(`P(합) = ${r(ppa)}+${r(ppb)}-${r(ppab)} = ${r(pUnion)}`, cx, H - 40, ORG, 14, t)
+        gText('겹치는 부분을 빼야 한다', cx, H - 20, MINT, 13, t)
+      }
+      break
+    }
+
+    case 'conditional_prob': {
+      const cpa = v('pa', 0.5), cpab = Math.min(cpa, v('pab', 0.2))
+      const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
+      const bw = Math.min(200, W - 80), bh = Math.min(120, H - 100)
+      const bx1 = cx - bw / 2, by1 = cy - bh / 2
+      // ① 전체
+      if (p > 0.02) {
+        const t = easeOutCubic(Math.min(1, (p - 0.02) / 0.18))
+        gText('① 전체 표본공간', cx, 22, WHITE, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = WHITE; ctx.lineWidth = 2; ctx.strokeRect(bx1, by1, bw, bh); ctx.restore()
+      }
+      // ② A 영역
+      if (p > 0.22) {
+        const t = easeOutCubic(Math.min(1, (p - 0.22) / 0.2))
+        gText('② A 영역', cx, 22, VIO, 14, t)
+        const aw = bw * cpa
+        ctx.save(); ctx.globalAlpha = t * 0.3; ctx.fillStyle = VIO; ctx.fillRect(bx1, by1, aw, bh); ctx.restore()
+        gText(`P(A)=${r(cpa)}`, bx1 + aw / 2, by1 - 12, VIO, 13, t)
+      }
+      // ③ 축소
+      if (p > 0.45) {
+        const t = easeOutCubic(Math.min(1, (p - 0.45) / 0.2))
+        gText('③ A가 일어난 후', cx, 22, GRN, 14, t)
+        const aw = bw * cpa, abw = aw * (cpab / cpa)
+        ctx.save(); ctx.globalAlpha = t * 0.4; ctx.fillStyle = GRN; ctx.fillRect(bx1, by1, abw, bh); ctx.restore()
+        gText(`A교B`, bx1 + abw / 2, cy, GRN, 12, t)
+      }
+      // ⑤ 수식
+      if (p > 0.7) {
+        const t = easeOutCubic(Math.min(1, (p - 0.7) / 0.2))
+        const pBA = cpab / cpa
+        gText(`P(B|A) = P(A교B)/P(A) = ${r(cpab)}/${r(cpa)} = ${r(pBA)}`, cx, H - 22, MINT, 14, t)
+      }
+      break
+    }
+
+    case 'independence': {
+      const ipa = v('pa', 0.3), ipb = v('pb', 0.4)
+      const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
+      const pab = ipa * ipb
+      // ① 독립
+      if (p > 0.02 && p < 0.55) {
+        const t = easeOutCubic(Math.min(1, (p - 0.02) / 0.25))
+        gText('① 독립: 서로 영향 없음', cx, 22, VIO, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = VIO; ctx.lineWidth = 2; ctx.strokeRect(cx - 120, cy - 30, 80, 40); ctx.restore()
+        gText(`A: ${r(ipa)}`, cx - 80, cy - 8, VIO, 14, t)
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = GRN; ctx.lineWidth = 2; ctx.strokeRect(cx + 40, cy - 30, 80, 40); ctx.restore()
+        gText(`B: ${r(ipb)}`, cx + 80, cy - 8, GRN, 14, t)
+      }
+      // ② 확인
+      if (p > 0.35) {
+        const t = easeOutCubic(Math.min(1, (p - 0.35) / 0.2))
+        gText(`② P(A교B) = P(A)×P(B) = ${r(pab)}`, cx, cy + 40, ORG, 14, t)
+        gText('성립하면 독립!', cx, cy + 62, MINT, 13, t)
+      }
+      // ③ 종속
+      if (p > 0.6) {
+        const t = easeOutCubic(Math.min(1, (p - 0.6) / 0.2))
+        gText('③ 종속이면: A가 일어나면 B 확률 변함', cx, cy + 90, '#999', 13, t)
+      }
+      if (p > 0.82) { const t = easeOutCubic(Math.min(1, (p - 0.82) / 0.15)); gText('독립 = 곱셈 법칙 성립', cx, H - 22, MINT, 14, t) }
+      break
+    }
+
+    case 'discrete_rv': {
+      const drn = Math.max(2, Math.min(8, Math.round(v('n', 6))))
+      const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
+      const prob = 1 / drn, ev = (drn + 1) / 2
+      const barW = Math.min(50, (W - 60) / drn - 4), maxBH = H - 100, baseY = H - 35
+      const ox = cx - drn * (barW + 4) / 2
+      // ① 막대
+      for (let i = 1; i <= drn; i++) {
+        const bh = prob * maxBH * 2
+        const delay = 0.02 + (i - 1) * (0.3 / drn)
+        if (p < delay) continue
+        const t = easeOutCubic(Math.min(1, (p - delay) / 0.12))
+        const x = ox + (i - 1) * (barW + 4)
+        ctx.save(); ctx.globalAlpha = t * 0.5; ctx.fillStyle = VIO; ctx.fillRect(x, baseY - bh * t, barW, bh * t); ctx.restore()
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = VIO; ctx.lineWidth = 1.5; ctx.strokeRect(x, baseY - bh * t, barW, bh * t); ctx.restore()
+        gText(String(i), x + barW / 2, baseY + 14, '#999', 12, t)
+        gText(`1/${drn}`, x + barW / 2, baseY - bh * t - 12, VIO, 10, t)
+      }
+      if (p > 0.05) gText(`① 주사위 1~${drn}`, cx, 22, VIO, 14, easeOutCubic(Math.min(1, (p - 0.05) / 0.1)))
+      // ③ 기댓값
+      if (p > 0.5) {
+        const t = easeOutCubic(Math.min(1, (p - 0.5) / 0.2))
+        const evX = ox + (ev - 1) * (barW + 4) + barW / 2
+        gLine(evX, baseY + 5, evX, baseY - 50, ORG, 2.5, t)
+        gText(`E(X) = ${r(ev)}`, evX + 20, baseY - 40, ORG, 14, t)
+      }
+      if (p > 0.75) { const t = easeOutCubic(Math.min(1, (p - 0.75) / 0.2)); gText(`무한히 반복하면 평균 ${r(ev)}`, cx, H - 22, MINT, 14, t) }
+      break
+    }
+
+    case 'binomial_dist': {
+      const bdn = Math.max(2, Math.min(20, Math.round(v('n', 10)))), bdp = Math.max(0.05, Math.min(0.95, v('p', 0.5)))
+      const VIO = '#534AB7', GRN = '#1D9E75'
+      const fact = (n: number): number => n <= 1 ? 1 : n * fact(n - 1)
+      const C2 = (n: number, k: number) => { if (k > n || k < 0) return 0; if (k > n - k) k = n - k; let r2 = 1; for (let i = 0; i < k; i++) r2 = r2 * (n - i) / (i + 1); return Math.round(r2) }
+      const barW = Math.min(30, (W - 60) / (bdn + 1) - 2), maxBH = H - 90, baseY = H - 35
+      const ox = cx - (bdn + 1) * (barW + 2) / 2
+      let maxP = 0
+      for (let k = 0; k <= bdn; k++) { const pk = C2(bdn, k) * Math.pow(bdp, k) * Math.pow(1 - bdp, bdn - k); if (pk > maxP) maxP = pk }
+      for (let k = 0; k <= bdn; k++) {
+        const pk = C2(bdn, k) * Math.pow(bdp, k) * Math.pow(1 - bdp, bdn - k)
+        const bh = (pk / maxP) * maxBH * 0.7
+        const delay = 0.02 + k * (0.4 / (bdn + 1))
+        if (p < delay) continue
+        const t = easeOutCubic(Math.min(1, (p - delay) / 0.1))
+        const x = ox + k * (barW + 2)
+        ctx.save(); ctx.globalAlpha = t * 0.5; ctx.fillStyle = VIO; ctx.fillRect(x, baseY - bh * t, barW, bh * t); ctx.restore()
+        ctx.save(); ctx.globalAlpha = t; ctx.strokeStyle = VIO; ctx.lineWidth = 1; ctx.strokeRect(x, baseY - bh * t, barW, bh * t); ctx.restore()
+        if (barW > 12) gText(String(k), x + barW / 2, baseY + 12, 'rgba(255,255,255,0.4)', 9, t)
+      }
+      if (p > 0.05) gText(`① B(${bdn}, ${r(bdp)})`, cx, 22, VIO, 14, easeOutCubic(Math.min(1, (p - 0.05) / 0.1)))
+      if (p > 0.55) { const t = easeOutCubic(Math.min(1, (p - 0.55) / 0.2)); gText(`기댓값 = n·p = ${r(bdn * bdp)}`, cx, baseY + 30, GRN, 14, t) }
+      if (p > 0.78) { const t = easeOutCubic(Math.min(1, (p - 0.78) / 0.18)); gText('n이 커지면 → 정규분포 근사', cx, H - 22, MINT, 14, t) }
+      break
+    }
+
     case 'discriminant': {
       const da = v('a', 1), db = v('b', -4), dc = v('c', 3)
       const D = db * db - 4 * da * dc
@@ -4841,8 +5227,6 @@ switch (type) {
 
     // 나머지 고등 케이스: 앰버 원 fallback
     case 'higher_eq': case 'simul_quad':
-    case 'prob_addition': case 'conditional_prob':
-    case 'independence': case 'discrete_rv': case 'binomial_dist':
     case 'sampling_dist': case 'confidence_interval': case 'proportion_estimate':
     case 'hypothesis_test': case 'line_eq': case 'circle_eq':
     case 'transformation': case 'space_vector': {

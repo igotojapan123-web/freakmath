@@ -23,9 +23,9 @@ const HIGH_3D_TYPES = new Set([
   'induction',
   'trig_func',
   'vector_2d',
-  'derivative_coeff','derivative_func','diff_formula','diff_application','max_min','tangent_line',
-  'indefinite_integral','definite_integral','area_integral','series_sum','fundamental_theorem',
-  'prob_addition','conditional_prob','independence','discrete_rv','binomial_dist','normal_dist',
+  'derivative_coeff',
+  'definite_integral','fundamental_theorem',
+  'normal_dist',
   'sampling_dist','confidence_interval','proportion_estimate','trig_identity','line_eq','circle_eq',
   'transformation','conic_section','space_vector','exponent_viz','coordinate_plane','diff_rules',
 ])
