@@ -1,0 +1,64 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+
+// 고등 3D visualType 목록
+const HIGH_3D_TYPES = new Set([
+  // 중등 3D (7개)
+  'pythagoras_viz','similarity_volume','sphere_volume','sphere_surface','cylinder_surface','cone_volume','cone_surface',
+  // 고등 3D
+  'poly_add','poly_mul_h','expand_formula','factor_h','remainder_theorem','factor_theorem',
+  'complex_number','discriminant','vieta','quad_func_eq','abs_function','sigma_notation',
+  'quad_inequality','abs_inequality','counting_h','permutation','combination','binomial_theorem',
+  'set_operation','proposition','function_h','composite_func','inverse_func','rational_func',
+  'irrational_func','arithmetic_seq','geometric_seq','arithmetic_sum','geometric_sum','induction',
+  'exp_func','log_func','exp_log_eq','trig_func','trig_graph','trig_addition','sine_rule',
+  'cosine_rule','vector_2d','dot_product','seq_limit','series','func_limit','continuity',
+  'derivative_coeff','derivative_func','diff_formula','diff_application','max_min','tangent_line',
+  'indefinite_integral','definite_integral','area_integral','series_sum','fundamental_theorem',
+  'prob_addition','conditional_prob','independence','discrete_rv','binomial_dist','normal_dist',
+  'sampling_dist','confidence_interval','proportion_estimate','trig_identity','line_eq','circle_eq',
+  'transformation','conic_section','space_vector','exponent_viz','coordinate_plane','diff_rules',
+])
+
+interface Props {
+  visualType: string
+  values?: Record<string, number>
+  height?: number
+}
+
+export default function FormulaVizClient({ visualType, values, height = 240 }: Props) {
+  const [mounted, setMounted] = useState(false)
+  const [Viz, setViz] = useState<any>(null)
+
+  const is3D = HIGH_3D_TYPES.has(visualType)
+
+  useEffect(() => {
+    setMounted(true)
+    if (is3D) {
+      import('./FormulaViz3D').then(mod => setViz(() => mod.default))
+    } else {
+      import('./FormulaViz').then(mod => setViz(() => mod.default))
+    }
+  }, [is3D])
+
+  if (!mounted || !Viz) {
+    return (
+      <div style={{
+        height,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#05080f',
+        borderRadius: '12px',
+        color: 'rgba(255,255,255,0.2)',
+        fontSize: '13px',
+        fontFamily: 'Noto Sans KR',
+      }}>
+        {is3D ? '3D 시각화 로딩 중...' : '애니메이션 로딩 중...'}
+      </div>
+    )
+  }
+
+  return <Viz visualType={visualType} values={values} height={height} />
+}

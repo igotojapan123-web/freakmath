@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# QA bot outputs
+qa-screenshots/
+qa-*.json
+*.output
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+qa-responsive-screenshots/
+qa-visual-screenshots/
