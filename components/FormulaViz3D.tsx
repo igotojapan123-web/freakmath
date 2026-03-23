@@ -1236,35 +1236,6 @@ export default function FormulaViz3D({ visualType, values = {}, height = 240 }: 
       // 중등 ★3D (7개)
       // ══════════════════════════════════════════
 
-      case 'pythagoras_viz': {
-        // M045: 피타고라스 — 정사각형 블록 솟아오름
-        const a=3,b=4,c=5,sc=0.4
-        // 삼각형
-        scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(b*sc,0,0),new THREE.Vector3(0,a*sc,0),new THREE.Vector3(0,0,0)]),new THREE.LineBasicMaterial({color:WHT,linewidth:2})))
-        // a² 정사각형
-        const sqA=addBox(-a*sc/2,a*sc/2,0,a*sc,a*sc,0.3,VIO,0.4);sqA.visible=false
-        // b² 정사각형
-        const sqB=addBox(b*sc/2,-b*sc/2,0,b*sc,b*sc,0.3,GRN,0.4);sqB.visible=false
-        // c² 정사각형 (빗변)
-        const sqC=addBox(b*sc/2+0.5,a*sc/2+0.5,0,c*sc,c*sc,0.3,ORG,0.3);sqC.visible=false
-        const lA=makeLabel('a²=9','#534AB7',0.2);lA.position.set(-a*sc/2,a*sc+0.3,0);scene.add(lA);lA.visible=false
-        const lB=makeLabel('b²=16','#1D9E75',0.2);lB.position.set(b*sc/2,-b*sc-0.3,0);scene.add(lB);lB.visible=false
-        const lR=makeLabel('a²+b²=c² → 9+16=25','#D85A30');lR.position.set(1,4,0);scene.add(lR);lR.visible=false
-        // 파티클
-        const particles=new THREE.Points(new THREE.BufferGeometry().setFromPoints(Array.from({length:50},()=>new THREE.Vector3((Math.random()-0.5)*6,Math.random()*4,(Math.random()-0.5)*2))),new THREE.PointsMaterial({color:VIO,size:0.05,transparent:true,opacity:0.4}))
-        scene.add(particles)
-        camera.position.set(2,2,6)
-        scene.userData.animate=()=>{
-          const p2=Math.min(1,(t%loopLen)/360)
-          sqA.visible=p2>0.15;sqB.visible=p2>0.3;sqC.visible=p2>0.5
-          lA.visible=p2>0.2;lB.visible=p2>0.35;lR.visible=p2>0.7
-          if(p2>0.15) sqA.scale.y=Math.min(1,((p2-0.15)*5))*3+0.01
-          if(p2>0.3) sqB.scale.y=Math.min(1,((p2-0.3)*5))*3+0.01
-          if(p2>0.5) sqC.scale.y=Math.min(1,((p2-0.5)*5))*3+0.01
-          particles.rotation.y=t*0.002
-        }
-        break
-      }
 
       case 'similarity_volume': {
         // M049: 닮음비 1:2 부피비 1:8 — 정육면체

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 // 고등 3D visualType 목록
 const HIGH_3D_TYPES = new Set([
   // 중등 3D (7개)
-  'pythagoras_viz','similarity_volume','sphere_volume','sphere_surface','cylinder_surface','cone_volume','cone_surface',
+  'similarity_volume','sphere_volume','sphere_surface','cylinder_surface','cone_volume','cone_surface',
   // 고등 3D
   'poly_add','poly_mul_h','expand_formula','factor_h','remainder_theorem','factor_theorem',
   'complex_number','discriminant','vieta','quad_func_eq','abs_function','sigma_notation',
