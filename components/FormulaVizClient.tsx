@@ -20,9 +20,8 @@ const HIGH_3D_TYPES = new Set([
   'similarity_volume','sphere_volume','sphere_surface','cylinder_surface','cone_volume','cone_surface',
   // 고등 3D
   'discriminant',
-  'composite_func','inverse_func','rational_func',
-  'irrational_func','arithmetic_seq','geometric_seq','arithmetic_sum','geometric_sum','induction',
-  'exp_func','log_func','exp_log_eq','trig_func','trig_graph','trig_addition','sine_rule',
+  'induction',
+  'exp_log_eq','trig_func','trig_graph','trig_addition','sine_rule',
   'cosine_rule','vector_2d','dot_product','seq_limit','series','func_limit','continuity',
   'derivative_coeff','derivative_func','diff_formula','diff_application','max_min','tangent_line',
   'indefinite_integral','definite_integral','area_integral','series_sum','fundamental_theorem',
