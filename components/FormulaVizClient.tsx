@@ -65,9 +65,20 @@ export default function FormulaVizClient({ visualType, values, height = 240, for
     )
   }
 
-  // R3F 전용 컴포넌트
-  if (visualType === 'pythagoras_viz' && !forceCanvas2D) return <PythagorasR3F />
-  if (visualType === 'definite_integral' && !forceCanvas2D) return <DefiniteIntegralR3F />
+  const hint3D = is3D && (
+    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 4 }}>
+      🖱️ 마우스 드래그로 회전 · 휠로 확대/축소
+    </p>
+  )
 
-  return <Viz visualType={visualType} values={values} height={height} />
+  // R3F 전용 컴포넌트
+  if (visualType === 'pythagoras_viz' && !forceCanvas2D) return <><PythagorasR3F />{hint3D}</>
+  if (visualType === 'definite_integral' && !forceCanvas2D) return <><DefiniteIntegralR3F />{hint3D}</>
+
+  return (
+    <>
+      <Viz visualType={visualType} values={values} height={height} />
+      {hint3D}
+    </>
+  )
 }
