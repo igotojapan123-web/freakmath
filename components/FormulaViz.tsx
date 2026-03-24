@@ -231,14 +231,32 @@ switch (type) {
   }
 
   case 'times_table': {
-    const VIO = '#534AB7', GRN = '#1D9E75'
+    const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
     const a = v('a', 3), b = v('b', 4)
-    const cell = Math.min(30, Math.min((W - 80) / b, (H - 80) / a))
-    const ox = cx - (b * cell) / 2, oy = cy - (a * cell) / 2 - 10
+    const cell = Math.min(30, Math.min((W - 80) / b, (H - 100) / a))
+    const ox = cx - (b * cell) / 2, oy = cy - (a * cell) / 2 - 15
 
-    // 단계2~3: 격자가 줄 단위로 채워짐
+    // ① 곱셈식 등장
+    if (p > 0.05) {
+      const p1 = easeOutCubic((p - 0.05) / 0.15)
+      gText(`① ${a} × ${b} 곱셈표 시작!`, cx, oy - 28, 'rgba(255,255,255,0.7)', 14, p1)
+    }
+
+    // ② 격자 테두리 그리기 (격자 선)
+    if (p > 0.1) {
+      const p2 = easeOutCubic((p - 0.1) / 0.2)
+      for (let col = 0; col <= b; col++) {
+        gLine(ox + col * cell, oy, ox + col * cell, oy + a * cell, VIO, 1, p2 * 0.4)
+      }
+      for (let row = 0; row <= a; row++) {
+        gLine(ox, oy + row * cell, ox + b * cell, oy + row * cell, VIO, 1, p2 * 0.4)
+      }
+      gText(`② 가로 ${b}칸, 세로 ${a}줄 격자`, cx, oy - 14, VIO, 13, p2)
+    }
+
+    // ③ 격자가 줄 단위로 채워짐
     for (let row = 0; row < a; row++) {
-      const rowP = easeOutCubic(Math.min(1, Math.max(0, p * (a + 1) - row * 0.8)))
+      const rowP = easeOutCubic(Math.min(1, Math.max(0, (p - 0.2) * (a + 1) - row * 0.8)))
       for (let col = 0; col < b; col++) {
         const idx = row * b + col + 1
         const prog = rowP * easeOutElastic(Math.min(1, Math.max(0, rowP * 2 - col * 0.15)))
@@ -248,14 +266,31 @@ switch (type) {
         ctx.fillRect(ox + col * cell + 1, oy + row * cell + 1, cell - 2, cell - 2)
         ctx.strokeRect(ox + col * cell + 1, oy + row * cell + 1, cell - 2, cell - 2)
         ctx.restore()
-        // 단계4: 카운트
         if (prog > 0.5) gText(String(idx), ox + col * cell + cell / 2, oy + row * cell + cell / 2, 'rgba(255,255,255,0.5)', Math.min(11, cell - 6), prog)
       }
     }
-    // 단계1: 위에 수식
-    gText(`${a} \u00D7 ${b}`, cx, oy - 18, 'rgba(255,255,255,0.6)', 16, p)
-    // 단계5: 결과
-    if (p > 0.8) gText(`= ${a * b}`, cx, oy + a * cell + 22, GRN, 22, easeOutCubic((p - 0.8) / 0.2))
+
+    // ④ 교차점(꼭짓점)에 원 표시
+    if (p > 0.55) {
+      const p4 = easeOutCubic((p - 0.55) / 0.2)
+      for (let row = 0; row <= a; row++) {
+        for (let col = 0; col <= b; col++) {
+          gCircle(ox + col * cell, oy + row * cell, 3, ORG, true, p4 * 0.6)
+        }
+      }
+      gText(`④ 교차점 ${(a+1)*(b+1)}개 확인`, cx, oy + a * cell + 14, ORG, 12, p4)
+    }
+
+    // ⑤ 결과 강조
+    if (p > 0.78) {
+      const p5 = easeOutCubic((p - 0.78) / 0.22)
+      gLine(ox - 4, oy - 4, ox + b * cell + 4, oy - 4, GRN, 2, p5)
+      gLine(ox - 4, oy - 4, ox - 4, oy + a * cell + 4, GRN, 2, p5)
+      gLine(ox + b * cell + 4, oy - 4, ox + b * cell + 4, oy + a * cell + 4, GRN, 2, p5)
+      gLine(ox - 4, oy + a * cell + 4, ox + b * cell + 4, oy + a * cell + 4, GRN, 2, p5)
+      gCircle(cx, oy + a * cell + 34, 18, GRN, true, p5 * 0.3)
+      gText(`⑤ ${a} × ${b} = ${a * b}`, cx, oy + a * cell + 34, GRN, 18, p5)
+    }
     break
   }
 
@@ -416,40 +451,75 @@ switch (type) {
   }
 
   case 'fraction_intro': {
-    const VIO = '#534AB7'
+    const VIO = '#534AB7', GRN = '#1D9E75', ORG = '#D85A30'
     const numer = v('a', 3), denom = v('b', 4)
-    const r2 = Math.min(70, H / 2 - 25)
+    const r2 = Math.min(65, H / 2 - 30)
 
-    // 단계1: 원형 피자
-    ctx.save(); ctx.globalAlpha = p * 0.15; ctx.fillStyle = 'rgba(255,255,255,1)'
-    ctx.beginPath(); ctx.arc(cx, cy, r2, 0, Math.PI * 2); ctx.fill(); ctx.restore()
-    ctx.save(); ctx.globalAlpha = p * 0.4; ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2
-    ctx.beginPath(); ctx.arc(cx, cy, r2, 0, Math.PI * 2); ctx.stroke(); ctx.restore()
-
-    // 단계2: 칼선
-    for (let i = 0; i < denom; i++) {
-      const cutP = easeOutCubic(Math.min(1, Math.max(0, (p - 0.15) * 3 - i * 0.15)))
-      const angle = -Math.PI / 2 + (i / denom) * Math.PI * 2
-      gLine(cx, cy, cx + Math.cos(angle) * r2, cy + Math.sin(angle) * r2, 'rgba(255,255,255,0.3)', 1.5, cutP)
+    // ① 원형 피자 등장
+    if (p > 0.02) {
+      const p1 = easeOutCubic((p - 0.02) / 0.18)
+      ctx.save(); ctx.globalAlpha = p1 * 0.15; ctx.fillStyle = 'rgba(255,255,255,1)'
+      ctx.beginPath(); ctx.arc(cx, cy, r2, 0, Math.PI * 2); ctx.fill(); ctx.restore()
+      ctx.save(); ctx.globalAlpha = p1 * 0.5; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2.5
+      ctx.beginPath(); ctx.arc(cx, cy, r2, 0, Math.PI * 2); ctx.stroke(); ctx.restore()
+      gCircle(cx, cy, r2, 'rgba(255,255,255,0.3)', false, p1 * 0.4)
+      gText(`① 원을 ${denom}등분 해보자!`, cx, cy - r2 - 18, 'rgba(255,255,255,0.7)', 14, p1)
     }
 
-    // 단계3: 조각 채우기
+    // ② 분수선(지름선) 표시
+    if (p > 0.15) {
+      const p2 = easeOutCubic((p - 0.15) / 0.15)
+      gLine(cx - r2, cy, cx + r2, cy, ORG, 2, p2 * 0.5)
+      gLine(cx, cy - r2, cx, cy + r2, ORG, 2, p2 * 0.5)
+      gText(`② 기준선 긋기`, cx, cy + r2 + 14, ORG, 12, p2)
+    }
+
+    // ③ 칼선 — denom등분
+    for (let i = 0; i < denom; i++) {
+      const cutP = easeOutCubic(Math.min(1, Math.max(0, (p - 0.28) * 3 - i * 0.15)))
+      const angle = -Math.PI / 2 + (i / denom) * Math.PI * 2
+      gLine(cx, cy, cx + Math.cos(angle) * r2, cy + Math.sin(angle) * r2, 'rgba(255,255,255,0.35)', 1.5, cutP)
+    }
+    if (p > 0.3) {
+      const p3 = easeOutCubic((p - 0.3) / 0.15)
+      gText(`③ ${denom}조각으로 나누기`, cx, cy + r2 + 28, 'rgba(255,255,255,0.6)', 12, p3)
+    }
+
+    // ④ 조각 채우기 — numer개
     for (let i = 0; i < denom; i++) {
       const filled = i < numer
       if (!filled) continue
-      const fillP = easeOutCubic(Math.min(1, Math.max(0, (p - 0.35) * 2.5 - i * 0.1)))
+      const fillP = easeOutCubic(Math.min(1, Math.max(0, (p - 0.45) * 2.5 - i * 0.1)))
       const a1 = -Math.PI / 2 + (i / denom) * Math.PI * 2
       const a2 = -Math.PI / 2 + ((i + 1) / denom) * Math.PI * 2
-      ctx.save(); ctx.globalAlpha = fillP * 0.6; ctx.fillStyle = VIO
+      ctx.save(); ctx.globalAlpha = fillP * 0.65; ctx.fillStyle = VIO
       ctx.shadowBlur = 10; ctx.shadowColor = VIO
       ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r2 - 2, a1, a2); ctx.closePath(); ctx.fill(); ctx.restore()
+      // 조각 중심에 원 점
+      if (fillP > 0.5) {
+        const midA = (a1 + a2) / 2
+        gCircle(cx + Math.cos(midA) * r2 * 0.6, cy + Math.sin(midA) * r2 * 0.6, 5, GRN, true, fillP * 0.8)
+      }
+    }
+    if (p > 0.5) {
+      const p4 = easeOutCubic((p - 0.5) / 0.2)
+      gText(`④ ${numer}조각 색칠 완료!`, cx, cy + r2 + 42, VIO, 13, p4)
     }
 
-    // 단계4~5: 분수 + 설명
-    if (p > 0.65) {
-      const fp = easeOutCubic((p - 0.65) / 0.35)
-      gText(`${numer}/${denom}`, cx + r2 + 40, cy, VIO, 24, fp)
-      gText(`${denom}\uC870\uAC01 \uC911 ${numer}\uC870\uAC01`, cx, cy + r2 + 22, 'rgba(255,255,255,0.5)', 13, fp)
+    // ⑤ 분수 표시 + 설명
+    if (p > 0.7) {
+      const fp = easeOutCubic((p - 0.7) / 0.3)
+      // 분수 표시선 (분자/분모 구분선)
+      gLine(cx + r2 + 20, cy - 12, cx + r2 + 60, cy - 12, GRN, 2, fp)
+      // 원 테두리 강조
+      gLine(cx - r2, cy - r2, cx + r2, cy - r2, VIO, 1, fp * 0.3)
+      gLine(cx - r2, cy + r2, cx + r2, cy + r2, VIO, 1, fp * 0.3)
+      gLine(cx - r2, cy - r2, cx - r2, cy + r2, VIO, 1, fp * 0.3)
+      gLine(cx + r2, cy - r2, cx + r2, cy + r2, VIO, 1, fp * 0.3)
+      gCircle(cx + r2 + 40, cy - 12, 3, GRN, true, fp * 0.6)
+      gText(`${numer}`, cx + r2 + 40, cy - 24, GRN, 20, fp)
+      gText(`${denom}`, cx + r2 + 40, cy + 2, GRN, 20, fp)
+      gText(`⑤ 분수 ${numer}/${denom} — ${denom}조각 중 ${numer}조각`, cx, cy + r2 + 58, GRN, 13, fp)
     }
     break
   }
@@ -651,22 +721,74 @@ switch (type) {
 
   case 'simplify_fraction': {
     // E017: 약분 — 같은 크기 다른 표현
-    const VIO='#534AB7'
-    const fracs: [number,number][] = [[4,8],[2,4],[1,2]]
-    const rr=Math.min(45,(W-40)/(fracs.length*2.5))
-    fracs.forEach(([n,d],idx)=>{
-      const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.5-idx*0.5)))
-      const px=cx+(idx-1)*(rr*2+30),py=cy-10
-      // 원 + 등분 + 채우기
+    const VIO='#534AB7', GRN='#1D9E75', ORG='#D85A30'
+    const numBase=v('a',4), denomBase=v('b',8)
+    const gcdFn=(x:number,y:number):number=>y===0?x:gcdFn(y,x%y)
+    const gcdVal=gcdFn(numBase,denomBase)
+    const fracs: [number,number][] = [[numBase,denomBase],[numBase/Math.max(1,gcdVal/2),(denomBase/Math.max(1,gcdVal/2))],[numBase/gcdVal,denomBase/gcdVal]]
+    const safeFracs=fracs.map(([n,d])=>[Math.round(n),Math.round(d)] as [number,number])
+    const rr=Math.min(48,(W-40)/(safeFracs.length*2.8))
+
+    // ① 첫 번째 분수 원형 등장
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      gText(`① 분수 ${safeFracs[0][0]}/${safeFracs[0][1]} 시작`,cx,cy-rr-32,VIO,14,p1)
+    }
+
+    safeFracs.forEach(([n,d],idx)=>{
+      const prog=easeOutCubic(Math.min(1,Math.max(0,(p-0.05)*2.5-idx*0.55)))
+      const px=cx+(idx-1)*(rr*2+36),py=cy-8
+      // 원
       ctx.save();ctx.globalAlpha=prog*0.2;ctx.fillStyle='rgba(255,255,255,1)';ctx.beginPath();ctx.arc(px,py,rr,0,Math.PI*2);ctx.fill();ctx.restore()
-      for(let i=0;i<d;i++){const a1=-Math.PI/2+(i/d)*Math.PI*2,a2=-Math.PI/2+((i+1)/d)*Math.PI*2
-        ctx.save();ctx.globalAlpha=prog*0.3;ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=1
-        ctx.beginPath();ctx.moveTo(px,py);ctx.arc(px,py,rr,a1,a2);ctx.closePath();ctx.stroke();ctx.restore()
-        if(i<n){ctx.save();ctx.globalAlpha=prog*0.55;ctx.fillStyle=VIO;ctx.beginPath();ctx.moveTo(px,py);ctx.arc(px,py,rr-1,a1,a2);ctx.closePath();ctx.fill();ctx.restore()}}
-      gText(`${n}/${d}`,px,py+rr+16,VIO,14,prog)
+      ctx.save();ctx.globalAlpha=prog*0.5;ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,rr,0,Math.PI*2);ctx.stroke();ctx.restore()
+      for(let i=0;i<d;i++){
+        const a1=-Math.PI/2+(i/d)*Math.PI*2,a2=-Math.PI/2+((i+1)/d)*Math.PI*2
+        // 분수선(피자 칼선)
+        gLine(px,py,px+Math.cos(a1)*rr,py+Math.sin(a1)*rr,'rgba(255,255,255,0.3)',1,prog)
+        if(i<n){
+          ctx.save();ctx.globalAlpha=prog*0.6;ctx.fillStyle=[VIO,ORG,GRN][idx];ctx.beginPath();ctx.moveTo(px,py);ctx.arc(px,py,rr-1,a1,a2);ctx.closePath();ctx.fill();ctx.restore()
+          // 조각마다 작은 원
+          if(prog>0.5){
+            const midA=(a1+a2)/2
+            gCircle(px+Math.cos(midA)*rr*0.62,py+Math.sin(midA)*rr*0.62,4,[VIO,ORG,GRN][idx],true,prog*0.7)
+          }
+        }
+      }
+      gText(`${n}/${d}`,px,py+rr+16,[VIO,ORG,GRN][idx],15,prog)
     })
-    // 단계4: 크기 같음 강조
-    if(p>0.8) gText('4/8 = 2/4 = 1/2 \u2014 \uD06C\uAE30\uAC00 \uAC19\uC544!',cx,H-18,'#1D9E75',14,easeOutCubic((p-0.8)/0.2))
+
+    // ② 연결 화살표 선
+    if(p>0.35){
+      const p2=easeOutCubic((p-0.35)/0.2)
+      gLine(cx-(rr+4),cy-8,cx-(rr*2+20),cy-8,'rgba(255,255,255,0.3)',1.5,p2)
+      gLine(cx+(rr+4),cy-8,cx+(rr*2+20),cy-8,'rgba(255,255,255,0.3)',1.5,p2)
+      gText(`② 약분 →`,cx-(rr+30),cy-24,ORG,11,p2)
+      gText(`→ 약분`,cx+(rr+10),cy-24,ORG,11,p2)
+    }
+
+    // ③ 등호 선 연결
+    if(p>0.55){
+      const p3=easeOutCubic((p-0.55)/0.2)
+      gLine(cx-(rr*3+36),cy+rr+30,cx+(rr*3+36),cy+rr+30,GRN,1.5,p3*0.4)
+      gText(`③ 크기가 모두 같아!`,cx,cy+rr+30,GRN,13,p3)
+    }
+
+    // ④ 세로 기준선
+    if(p>0.68){
+      const p4=easeOutCubic((p-0.68)/0.2)
+      for(let i=0;i<safeFracs.length;i++){
+        const px=cx+(i-1)*(rr*2+36)
+        gLine(px,cy-rr-10,px,cy+rr+10,'rgba(255,255,255,0.15)',1,p4)
+      }
+      gText(`④ 분모×분자 동시에 나누기 = 약분`,cx,cy+rr+44,ORG,12,p4)
+    }
+
+    // ⑤ 최종 결과
+    if(p>0.82){
+      const p5=easeOutCubic((p-0.82)/0.18)
+      gCircle(cx+(rr*2+36),cy-8,rr+6,GRN,false,p5*0.6)
+      gText(`⑤ 기약분수: ${safeFracs[2][0]}/${safeFracs[2][1]}`,cx,H-18,GRN,15,p5)
+    }
     break
   }
 
@@ -731,22 +853,61 @@ switch (type) {
   case 'fraction_divide': {
     // E020: 분수 나눗셈 — 뒤집어서 곱하기
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-    const steps: {text: string,color: string,note?: string}[] = [
-      {text:'2/3 \u00F7 1/4',color:WHITE},
-      {text:'\u00F7 \u2192 \u00D7 (\uB4A4\uC9D1\uAE30!)',color:VIO,note:'1/4 \u2192 4/1'},
-      {text:'2/3 \u00D7 4/1',color:GRN},
-      {text:'= 8/3',color:ORG},
-    ]
-    steps.forEach((s,i)=>{
-      const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.5-i*0.4)))
-      const y=cy-55+i*36
-      gText(s.text,cx,y,s.color,i===0?20:17,prog)
-      if(s.note&&prog>0.3) gText(s.note,cx,y+17,'rgba(255,255,255,0.35)',12,prog*0.8)
-    })
-    // 뒤집기 화살표
-    if(p>0.25&&p<0.6){const fp=easeOutCubic((p-0.25)/0.2)
-      ctx.save();ctx.globalAlpha=fp*0.5;ctx.strokeStyle=VIO;ctx.lineWidth=2
-      ctx.beginPath();ctx.arc(cx+70,cy-20,12,0,Math.PI*1.5);ctx.stroke();ctx.restore()}
+    const fn1=v('a',2),fd1=v('b',3),fn2=v('c',1),fd2=v('d',4)
+    const resultN=fn1*fd2, resultD=fd1*fn2
+
+    // ① 원래 나눗셈 식 등장
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      gText(`① ${fn1}/${fd1} ÷ ${fn2}/${fd2}`,cx,cy-80,WHITE,22,p1)
+      // 왼쪽 분수 시각 막대
+      const bW=120,bH=22,bx=cx-bW/2,by=cy-56
+      gLine(bx,by,bx+bW,by,'rgba(255,255,255,0.2)',1,p1)
+      gLine(bx,by+bH,bx+bW,by+bH,'rgba(255,255,255,0.2)',1,p1)
+      gLine(bx,by,bx,by+bH,'rgba(255,255,255,0.2)',1,p1)
+      gLine(bx+bW,by,bx+bW,by+bH,'rgba(255,255,255,0.2)',1,p1)
+      ctx.save();ctx.globalAlpha=p1*0.4;ctx.fillStyle=VIO;ctx.fillRect(bx+1,by+1,(bW*fn1/fd1)-2,bH-2);ctx.restore()
+    }
+
+    // ② 분수 나눗셈 → 역수 곱셈 변환
+    if(p>0.18){
+      const p2=easeOutCubic((p-0.18)/0.2)
+      gText(`② ÷ 는 뒤집어서 × 로!`,cx,cy-28,VIO,16,p2)
+      gLine(cx-80,cy-12,cx+80,cy-12,VIO,1.5,p2*0.5)
+      // 뒤집기 회전 호
+      ctx.save();ctx.globalAlpha=p2*0.6;ctx.strokeStyle=ORG;ctx.lineWidth=2.5
+      ctx.beginPath();ctx.arc(cx+60,cy-38,14,-Math.PI*0.2,Math.PI*1.3);ctx.stroke()
+      ctx.restore()
+      gText(`${fn2}/${fd2} → ${fd2}/${fn2}`,cx+60,cy-20,ORG,13,p2)
+    }
+
+    // ③ 역수로 변환된 식
+    if(p>0.38){
+      const p3=easeOutCubic((p-0.38)/0.2)
+      gText(`③ ${fn1}/${fd1} × ${fd2}/${fn2}`,cx,cy+10,GRN,20,p3)
+      // 연결 선
+      gLine(cx-60,cy+22,cx+60,cy+22,GRN,1.5,p3*0.4)
+      gLine(cx-60,cy-70,cx-60,cy+22,GRN,1.5,p3*0.3)
+    }
+
+    // ④ 분자×분자, 분모×분모 계산
+    if(p>0.55){
+      const p4=easeOutCubic((p-0.55)/0.2)
+      gLine(cx-50,cy+40,cx+50,cy+40,'rgba(255,255,255,0.3)',1.5,p4)
+      gText(`④ 분자: ${fn1}×${fd2}=${resultN}`,cx-40,cy+35,VIO,13,p4)
+      gText(`분모: ${fd1}×${fn2}=${resultD}`,cx+40,cy+55,ORG,13,p4)
+      gCircle(cx-40,cy+35,3,VIO,true,p4)
+      gCircle(cx+40,cy+55,3,ORG,true,p4)
+    }
+
+    // ⑤ 최종 결과
+    if(p>0.75){
+      const p5=easeOutCubic((p-0.75)/0.25)
+      gCircle(cx,cy+88,26,GRN,true,p5*0.25)
+      gText(`⑤ = ${resultN}/${resultD}`,cx,cy+88,GRN,22,p5)
+      gLine(cx-80,cy+70,cx+80,cy+70,GRN,1.5,p5*0.5)
+      gLine(cx-80,cy+105,cx+80,cy+105,GRN,1.5,p5*0.5)
+    }
     break
   }
 
@@ -788,22 +949,67 @@ switch (type) {
   case 'decimal_divide': {
     // E022: 소수 나눗셈 — ×10으로 자연수 변환
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-    const steps: {text:string,color:string,note?:string}[] = [
-      {text:'1.2 \u00F7 0.3',color:WHITE},
-      {text:'\u00D710 \u2192 12 \u00F7 3',color:VIO,note:'\uC591\uCABD\uC5D0 \u00D710'},
-      {text:'12\uAC1C\uB97C 3\uBB36\uC74C\uC73C\uB85C',color:GRN},
-      {text:'= 4',color:ORG},
-    ]
-    steps.forEach((s,i)=>{
-      const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.5-i*0.4)))
-      gText(s.text,cx,cy-50+i*34,s.color,i===0?20:17,prog)
-      if(s.note&&prog>0.3) gText(s.note,cx,cy-50+i*34+16,'rgba(255,255,255,0.35)',11,prog*0.8)
-    })
-    // 블록 시각화 (12÷3)
-    if(p>0.5){const bp=easeOutCubic((p-0.5)/0.35);const bsz=14,gap3=3
-      for(let g=0;g<3;g++){const color=[VIO,GRN,ORG][g]
-        for(let i=0;i<4;i++){const x=cx-80+g*60+i*(bsz+gap3);ctx.save();ctx.globalAlpha=bp*0.7;ctx.fillStyle=color+'55';ctx.strokeStyle=color;ctx.lineWidth=1.5
-          ctx.fillRect(x,cy+50,bsz,bsz);ctx.strokeRect(x,cy+50,bsz,bsz);ctx.restore()}}}
+    const dividend=v('a',1.2), divisor=v('b',0.3)
+    const mult=10, bigDividend=Math.round(dividend*mult), bigDivisor=Math.round(divisor*mult)
+    const result=Math.round(bigDividend/bigDivisor)
+
+    // ① 원래 소수 나눗셈 식
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      gText(`① ${dividend} ÷ ${divisor}`,cx,cy-90,WHITE,22,p1)
+      // 소수점 위치 강조선
+      gLine(cx-10,cy-78,cx-10,cy-65,ORG,2,p1*0.6)
+      gLine(cx+32,cy-78,cx+32,cy-65,ORG,2,p1*0.6)
+    }
+
+    // ② ×10 변환 시각화
+    if(p>0.18){
+      const p2=easeOutCubic((p-0.18)/0.22)
+      gText(`② 양쪽에 ×${mult} 하기`,cx,cy-54,VIO,16,p2)
+      // 양방향 화살표
+      gLine(cx-80,cy-42,cx-20,cy-30,VIO,2,p2*0.7)
+      gLine(cx+80,cy-42,cx+20,cy-30,VIO,2,p2*0.7)
+      gCircle(cx-80,cy-42,4,VIO,true,p2*0.7)
+      gCircle(cx+80,cy-42,4,VIO,true,p2*0.7)
+      gText(`×${mult}`,cx-60,cy-50,VIO,12,p2)
+      gText(`×${mult}`,cx+60,cy-50,VIO,12,p2)
+    }
+
+    // ③ 변환된 정수 나눗셈
+    if(p>0.38){
+      const p3=easeOutCubic((p-0.38)/0.2)
+      gText(`③ ${bigDividend} ÷ ${bigDivisor}`,cx,cy-14,GRN,20,p3)
+      gLine(cx-70,cy-2,cx+70,cy-2,GRN,1.5,p3*0.4)
+    }
+
+    // ④ 블록으로 나누기 시각화
+    if(p>0.52){
+      const p4=easeOutCubic((p-0.52)/0.25)
+      const bsz=16,gap3=4
+      const colors=[VIO,GRN,ORG,'#D85A30']
+      for(let g=0;g<bigDivisor;g++){
+        const color=colors[g%4]
+        const perGroup=Math.floor(bigDividend/bigDivisor)
+        for(let i=0;i<perGroup;i++){
+          const x=cx-((bigDividend/2)*(bsz+gap3))+(g*perGroup+i)*(bsz+gap3)
+          ctx.save();ctx.globalAlpha=p4*0.75;ctx.fillStyle=color+'55';ctx.strokeStyle=color;ctx.lineWidth=1.5
+          ctx.fillRect(x,cy+18,bsz,bsz);ctx.strokeRect(x,cy+18,bsz,bsz);ctx.restore()
+        }
+        // 그룹 구분선
+        const gx=cx-((bigDividend/2)*(bsz+gap3))+(g*Math.floor(bigDividend/bigDivisor))*(bsz+gap3)-2
+        gLine(gx,cy+14,gx,cy+40,ORG,2,p4*0.7)
+        gCircle(gx,cy+14,3,ORG,true,p4*0.7)
+      }
+      gText(`④ ${bigDividend}개를 ${bigDivisor}묶음으로`,cx,cy+46,ORG,13,p4)
+    }
+
+    // ⑤ 최종 결과
+    if(p>0.75){
+      const p5=easeOutCubic((p-0.75)/0.25)
+      gLine(cx-90,cy+64,cx+90,cy+64,GRN,2,p5*0.6)
+      gCircle(cx,cy+80,20,GRN,true,p5*0.25)
+      gText(`⑤ ${dividend} ÷ ${divisor} = ${result}`,cx,cy+80,GRN,18,p5)
+    }
     break
   }
 
@@ -861,22 +1067,68 @@ switch (type) {
 
   case 'percentage': {
     // E025: 백분율 — 100칸 채우기
-    const VIO='#534AB7',GRN='#1D9E75'
+    const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
     const pct=Math.round(Math.min(99,Math.max(1,v('a',0.25)*100)))
-    const cols=10,cellSz=Math.min((W-60)/cols,(H-60)/cols)
-    const ox=cx-(cols*cellSz)/2,oy=cy-(cols*cellSz)/2-5
+    const cols=10,cellSz=Math.min((W-80)/cols,(H-100)/cols)
+    const ox=cx-(cols*cellSz)/2,oy=cy-(cols*cellSz)/2-10
+
+    // ① 제목
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.13)
+      gText(`① 100칸 격자로 백분율 이해하기`,cx,oy-22,VIO,13,p1)
+    }
+
+    // ② 100칸 격자 + 행/열 구분선
+    if(p>0.12){
+      const p2=easeOutCubic((p-0.12)/0.18)
+      // 격자 세로선 (열)
+      for(let col=0;col<=cols;col++){
+        gLine(ox+col*cellSz, oy, ox+col*cellSz, oy+cols*cellSz, 'rgba(255,255,255,0.15)', 1, p2*0.5)
+      }
+      // 격자 가로선 (행)
+      for(let row=0;row<=cols;row++){
+        gLine(ox, oy+row*cellSz, ox+cols*cellSz, oy+row*cellSz, 'rgba(255,255,255,0.15)', 1, p2*0.5)
+      }
+      gText(`② 전체 100칸`,cx,oy+cols*cellSz+14,ORG,12,p2)
+    }
+
+    // ③ 칸 채우기
     for(let i=0;i<100;i++){
       const row=Math.floor(i/cols),col=i%cols
       const filled=i<pct
-      const prog=easeOutCubic(Math.min(1,Math.max(0,p*2-(i/100)*0.5)))
-      ctx.save();ctx.globalAlpha=prog*(filled?0.7:0.12)
-      ctx.fillStyle=filled?VIO+'88':'rgba(255,255,255,0.06)'
-      ctx.strokeStyle=filled?VIO:'rgba(255,255,255,0.08)'
+      const prog=easeOutCubic(Math.min(1,Math.max(0,(p-0.25)*2.5-(i/100)*0.5)))
+      ctx.save();ctx.globalAlpha=prog*(filled?0.72:0.1)
+      ctx.fillStyle=filled?VIO+'88':'rgba(255,255,255,0.05)'
+      ctx.strokeStyle=filled?VIO:'rgba(255,255,255,0.07)'
       ctx.lineWidth=1;ctx.shadowBlur=filled?4:0;ctx.shadowColor=VIO
       ctx.fillRect(ox+col*cellSz+1,oy+row*cellSz+1,cellSz-2,cellSz-2)
       ctx.strokeRect(ox+col*cellSz+1,oy+row*cellSz+1,cellSz-2,cellSz-2);ctx.restore()
     }
-    if(p>0.6) gText(`${pct}/100 = ${pct}%`,cx,oy+cols*cellSz+20,GRN,18,easeOutCubic((p-0.6)/0.4))
+    if(p>0.3){
+      const p3=easeOutCubic((p-0.3)/0.2)
+      gText(`③ ${pct}칸 채우는 중...`,cx,oy+cols*cellSz+28,VIO,13,p3)
+    }
+
+    // ④ 채워진 영역 테두리 강조
+    if(p>0.55){
+      const p4=easeOutCubic((p-0.55)/0.2)
+      const filledCols=pct%cols, filledRows=Math.floor(pct/cols)
+      gLine(ox,oy,ox+cols*cellSz,oy,GRN,2,p4*0.6)
+      gLine(ox,oy,ox,oy+filledRows*cellSz,GRN,2,p4*0.6)
+      if(filledCols>0) gLine(ox,oy+filledRows*cellSz,ox+filledCols*cellSz,oy+filledRows*cellSz,GRN,2,p4*0.6)
+      // 모서리 원
+      gCircle(ox,oy,5,GRN,true,p4*0.7)
+      gCircle(ox+cols*cellSz,oy,5,GRN,true,p4*0.7)
+      gText(`④ ${pct}칸 = 전체의 ${pct}/100`,cx,oy+cols*cellSz+42,GRN,13,p4)
+    }
+
+    // ⑤ 최종 백분율
+    if(p>0.75){
+      const p5=easeOutCubic((p-0.75)/0.25)
+      gLine(cx-80,oy+cols*cellSz+58,cx+80,oy+cols*cellSz+58,GRN,1.5,p5*0.5)
+      gCircle(cx,oy+cols*cellSz+72,16,GRN,true,p5*0.25)
+      gText(`⑤ ${pct}/100 = ${pct}%`,cx,oy+cols*cellSz+72,GRN,18,p5)
+    }
     break
   }
 
@@ -929,35 +1181,70 @@ switch (type) {
   case 'angle': {
     // E028: 각도 — 반직선 회전
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-    const armLen=Math.min(90,W*0.3)
-    const pivotX=cx,pivotY=cy+20
-    // 고정 반직선
-    gLine(pivotX,pivotY,pivotX+armLen,pivotY,'rgba(255,255,255,0.4)',2,p)
-    // 단계2: 회전 반직선
-    const targetAngles=[30,45,90,180]
-    const totalDur=1,pauseDur=0.15
-    const segDur=totalDur/(targetAngles.length)
-    let currentDeg=0
-    for(let i=0;i<targetAngles.length;i++){
-      const segStart=i*segDur,segEnd=segStart+segDur-pauseDur
-      if(p>=segStart&&p<=segStart+segDur) currentDeg=targetAngles[i]*Math.min(1,(p-segStart)/(segDur-pauseDur))
-      else if(p>segStart+segDur) currentDeg=targetAngles[i]
+    const armLen=Math.min(88,W*0.28)
+    const pivotX=cx,pivotY=cy+10
+    const targetDeg=v('deg',90)
+
+    // ① 꼭짓점 + 고정 반직선 등장
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      gLine(pivotX,pivotY,pivotX+armLen,pivotY,'rgba(255,255,255,0.5)',2.5,p1)
+      gCircle(pivotX,pivotY,5,WHITE,true,p1*0.7)
+      gText(`① 기준 반직선`,pivotX+armLen/2,pivotY+16,VIO,12,p1)
     }
-    currentDeg=Math.min(180,currentDeg)
+
+    // ② 각도 호 + 회전 반직선
+    const currentDeg=targetDeg*easeOutCubic(Math.min(1,Math.max(0,(p-0.15)/0.55)))
     const rad=currentDeg*Math.PI/180
     const endX=pivotX+Math.cos(-rad)*armLen,endY=pivotY+Math.sin(-rad)*armLen
-    gLine(pivotX,pivotY,endX,endY,GRN,2.5,p)
-    // 호
-    if(p>0.05){ctx.save();ctx.globalAlpha=p*0.5;ctx.strokeStyle=ORG;ctx.lineWidth=2;ctx.shadowBlur=6;ctx.shadowColor=ORG
-      ctx.beginPath();ctx.arc(pivotX,pivotY,30,0,-rad,true);ctx.stroke();ctx.restore()
-      gText(`${Math.round(currentDeg)}\u00B0`,pivotX+40,pivotY-20,ORG,15,p)}
-    // 단계3: 특수각 이름
-    const names:{[k:number]:string}={90:'\uC9C1\uAC01',180:'\uD3C9\uAC01'}
-    const nearest=targetAngles.find(a=>Math.abs(currentDeg-a)<2)
-    if(nearest&&names[nearest]) gText(names[nearest],pivotX,pivotY-armLen-10,VIO,14,p)
-    // 단계4: 직각 네모
-    if(Math.abs(currentDeg-90)<3){const sq=12;ctx.save();ctx.globalAlpha=0.6;ctx.strokeStyle=VIO;ctx.lineWidth=2
-      ctx.strokeRect(pivotX,pivotY-sq,sq,sq);ctx.restore()}
+
+    if(p>0.15){
+      const p2=easeOutCubic((p-0.15)/0.2)
+      gLine(pivotX,pivotY,endX,endY,GRN,3,p2)
+      // 각도 호
+      ctx.save();ctx.globalAlpha=p2*0.55;ctx.strokeStyle=ORG;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=ORG
+      ctx.beginPath();ctx.arc(pivotX,pivotY,36,0,-rad,true);ctx.stroke();ctx.restore()
+      gText(`${Math.round(currentDeg)}°`,pivotX+46,pivotY-24,ORG,16,p2)
+      gText(`② 반직선 회전`,cx,pivotY-armLen-12,GRN,12,p2)
+    }
+
+    // ③ 분도기 눈금선 (각도 눈금)
+    if(p>0.32){
+      const p3=easeOutCubic((p-0.32)/0.2)
+      for(let deg=0;deg<=180;deg+=30){
+        const gr=deg*Math.PI/180
+        const ix=pivotX+Math.cos(-gr)*armLen*0.88, iy=pivotY+Math.sin(-gr)*armLen*0.88
+        const ox2=pivotX+Math.cos(-gr)*(armLen+6), oy2=pivotY+Math.sin(-gr)*(armLen+6)
+        gLine(ix,iy,ox2,oy2,ORG,1.5,p3*0.5)
+        gText(`${deg}°`,ox2+(deg===0?8:deg===180?-8:0),oy2+4,'rgba(255,255,255,0.35)',9,p3)
+      }
+      gText(`③ 분도기 눈금`,pivotX-armLen,pivotY+22,ORG,11,p3)
+    }
+
+    // ④ 직각 표시 / 특수각 이름
+    if(p>0.52){
+      const p4=easeOutCubic((p-0.52)/0.22)
+      const isRight=Math.abs(currentDeg-90)<5
+      const isFlat=Math.abs(currentDeg-180)<5
+      if(isRight){
+        const sq=13
+        ctx.save();ctx.globalAlpha=p4*0.7;ctx.strokeStyle=VIO;ctx.lineWidth=2.5
+        ctx.strokeRect(pivotX,pivotY-sq,sq,sq);ctx.restore()
+        gText(`직각!`,pivotX+armLen*0.5,pivotY-armLen*0.5,VIO,14,p4)
+      }
+      if(isFlat) gText(`평각!`,pivotX,pivotY-armLen*0.3,VIO,14,p4)
+      gLine(pivotX-armLen-8,pivotY,pivotX+armLen+8,pivotY,'rgba(255,255,255,0.2)',1,p4*0.5)
+      gText(`④ ${Math.round(currentDeg)}° 각도 확인`,cx,pivotY+armLen*0.7,ORG,13,p4)
+    }
+
+    // ⑤ 각도 설명 + 시작/끝 점 표시
+    if(p>0.75){
+      const p5=easeOutCubic((p-0.75)/0.25)
+      gCircle(pivotX+armLen,pivotY,6,WHITE,true,p5*0.6)
+      gCircle(endX,endY,6,GRN,true,p5*0.6)
+      gLine(pivotX+armLen,pivotY-4,endX,endY-4,ORG,1,p5*0.3)
+      gText(`⑤ 각도 = ${Math.round(currentDeg)}° 완성!`,cx,pivotY+38,GRN,14,p5)
+    }
     break
   }
 
@@ -1016,70 +1303,181 @@ switch (type) {
     // E031: 직사각형 둘레 — 개미가 변 따라 이동
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
     const w2=v('a',5),h2=v('b',3)
-    const sc=Math.min(30,Math.min((W-80)/w2,(H-80)/h2))
-    const rx=cx-w2*sc/2,ry=cy-h2*sc/2-10
-    // 직사각형
-    ctx.save();ctx.globalAlpha=p*0.8;ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=2;ctx.strokeRect(rx,ry,w2*sc,h2*sc);ctx.restore()
-    // 개미 이동 (둘레 따라 진행)
+    const sc=Math.min(28,Math.min((W-80)/w2,(H-90)/h2))
+    const rx=cx-w2*sc/2,ry=cy-h2*sc/2-14
+
+    // ① 직사각형 윤곽 등장
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      ctx.save();ctx.globalAlpha=p1*0.7;ctx.strokeStyle='rgba(255,255,255,0.45)';ctx.lineWidth=2.5;ctx.strokeRect(rx,ry,w2*sc,h2*sc);ctx.restore()
+      // 꼭짓점 원
+      gCircle(rx,ry,5,WHITE,true,p1*0.6)
+      gCircle(rx+w2*sc,ry,5,WHITE,true,p1*0.6)
+      gCircle(rx+w2*sc,ry+h2*sc,5,WHITE,true,p1*0.6)
+      gCircle(rx,ry+h2*sc,5,WHITE,true,p1*0.6)
+      gText(`① 직사각형 가로=${w2}, 세로=${h2}`,cx,ry-16,VIO,13,p1)
+    }
+
+    // ② 변 길이 라벨
+    if(p>0.18){
+      const p2=easeOutCubic((p-0.18)/0.2)
+      gLine(rx,ry-10,rx+w2*sc,ry-10,VIO,2,p2*0.6)
+      gLine(rx+w2*sc+10,ry,rx+w2*sc+10,ry+h2*sc,GRN,2,p2*0.6)
+      gLine(rx,ry+h2*sc+10,rx+w2*sc,ry+h2*sc+10,VIO,2,p2*0.6)
+      gLine(rx-10,ry,rx-10,ry+h2*sc,GRN,2,p2*0.6)
+      gText(`${w2}`,cx,ry-22,VIO,13,p2)
+      gText(`${h2}`,rx+w2*sc+22,cy-14,GRN,13,p2)
+      gText(`② 4변 길이 확인`,cx,ry+h2*sc+24,VIO,12,p2)
+    }
+
     const perim=2*(w2+h2)*sc,dist=p*perim
     const corners=[[rx,ry],[rx+w2*sc,ry],[rx+w2*sc,ry+h2*sc],[rx,ry+h2*sc]]
     const edges=[w2*sc,h2*sc,w2*sc,h2*sc]
     const edgeColors=[VIO,GRN,VIO,GRN]
-    const edgeLabels=[String(w2),String(h2),String(w2),String(h2)]
-    let rem=dist,ei=0
-    // 변 색칠
-    for(let i=0;i<4&&rem>0;i++){const len=edges[i];const drawn=Math.min(rem,len);const [sx,sy]=corners[i];const [ex,ey]=corners[(i+1)%4]
+
+    // ③ 개미 이동 경로 색칠
+    let rem=dist
+    for(let i=0;i<4&&rem>0;i++){
+      const len=edges[i];const drawn=Math.min(rem,len)
+      const [sx,sy]=corners[i];const [ex,ey]=corners[(i+1)%4]
       const dx=(ex-sx)/len,dy=(ey-sy)/len
-      gLine(sx,sy,sx+dx*drawn,sy+dy*drawn,edgeColors[i],3,0.8)
-      // 변 길이 라벨
-      if(drawn>=len*0.5){const mx=(sx+ex)/2,my=(sy+ey)/2;const off=i%2===0?-14:14
-        gText(edgeLabels[i],mx+(i===1||i===3?off:0),my+(i===0||i===2?-14:14),edgeColors[i],12,Math.min(1,drawn/len))}
-      rem-=len;ei=i}
-    // 개미 위치
-    if(p<1){let rem2=dist;for(let i=0;i<4;i++){if(rem2<=edges[i]){const [sx,sy]=corners[i];const [ex,ey]=corners[(i+1)%4];const t=rem2/edges[i]
-        gCircle(sx+(ex-sx)*t,sy+(ey-sy)*t,5,ORG,true,0.9);break};rem2-=edges[i]}}
-    // 수식
-    if(p>0.85) gText(`(${w2}+${h2})\u00D72 = ${2*(w2+h2)}`,cx,ry+h2*sc+28,GRN,16,easeOutCubic((p-0.85)/0.15))
+      gLine(sx,sy,sx+dx*drawn,sy+dy*drawn,edgeColors[i],4,0.85)
+      rem-=len
+    }
+    if(p>0.22) gText(`③ 개미가 둘레 따라 이동!`,cx,ry+h2*sc+38,ORG,12,easeOutCubic((p-0.22)/0.2))
+
+    // ④ 개미(이동 점)
+    if(p<0.98){
+      let rem2=dist
+      for(let i=0;i<4;i++){
+        if(rem2<=edges[i]){
+          const [sx,sy]=corners[i];const [ex,ey]=corners[(i+1)%4];const t=rem2/edges[i]
+          gCircle(sx+(ex-sx)*t,sy+(ey-sy)*t,7,ORG,true,0.95)
+          break
+        }
+        rem2-=edges[i]
+      }
+    }
+    if(p>0.45) gText(`④ 지나간 거리 = ${r(p*2*(w2+h2),1)}`,cx,ry+h2*sc+52,ORG,12,easeOutCubic((p-0.45)/0.2))
+
+    // ⑤ 둘레 공식 + 결과
+    if(p>0.78){
+      const p5=easeOutCubic((p-0.78)/0.22)
+      gLine(cx-90,ry+h2*sc+66,cx+90,ry+h2*sc+66,GRN,1.5,p5*0.5)
+      gCircle(cx,ry+h2*sc+78,18,GRN,true,p5*0.25)
+      gText(`⑤ (${w2}+${h2})×2 = ${2*(w2+h2)}`,cx,ry+h2*sc+78,GRN,16,p5)
+    }
     break
   }
 
   case 'area_rect': {
     // E032: 직사각형 넓이 — 격자 채우기
-    const VIO='#534AB7',GRN='#1D9E75'
+    const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
     const w2=v('a',5),h2=v('b',3)
-    const cell=Math.min(30,Math.min((W-60)/w2,(H-70)/h2))
-    const ox=cx-w2*cell/2,oy=cy-h2*cell/2-5
+    const cell=Math.min(28,Math.min((W-70)/w2,(H-90)/h2))
+    const ox=cx-w2*cell/2,oy=cy-h2*cell/2-12
+
+    // ① 직사각형 외곽선 등장
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      ctx.save();ctx.globalAlpha=p1*0.6;ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=2.5;ctx.strokeRect(ox,oy,w2*cell,h2*cell);ctx.restore()
+      gText(`① 가로 ${w2}, 세로 ${h2}`,cx,oy-18,VIO,13,p1)
+      // 가로/세로 라벨선
+      gLine(ox,oy-8,ox+w2*cell,oy-8,VIO,2,p1*0.5)
+      gLine(ox-8,oy,ox-8,oy+h2*cell,GRN,2,p1*0.5)
+    }
+
+    // ② 격자 세로/가로선 먼저 그리기
+    if(p>0.15){
+      const p2=easeOutCubic((p-0.15)/0.2)
+      for(let col=0;col<=w2;col++) gLine(ox+col*cell,oy,ox+col*cell,oy+h2*cell,ORG,1,p2*0.3)
+      for(let row=0;row<=h2;row++) gLine(ox,oy+row*cell,ox+w2*cell,oy+row*cell,ORG,1,p2*0.3)
+      gText(`② 격자 ${w2}×${h2}`,cx,oy+h2*cell+15,ORG,12,p2)
+    }
+
+    // ③ 격자 셀 채우기 (행 단위)
     for(let row=0;row<h2;row++){
-      const rowP=easeOutCubic(Math.min(1,Math.max(0,p*(h2+1)-row*0.7)))
+      const rowP=easeOutCubic(Math.min(1,Math.max(0,(p-0.28)*(h2+1)-row*0.7)))
       for(let col=0;col<w2;col++){
         const prog=rowP*easeOutCubic(Math.min(1,Math.max(0,rowP*2-col*0.12)))
-        ctx.save();ctx.globalAlpha=prog*0.7;ctx.fillStyle=VIO+'55';ctx.strokeStyle=VIO;ctx.lineWidth=1.5
+        ctx.save();ctx.globalAlpha=prog*0.72;ctx.fillStyle=VIO+'55';ctx.strokeStyle=VIO;ctx.lineWidth=1.5
         ctx.fillRect(ox+col*cell+1,oy+row*cell+1,cell-2,cell-2);ctx.strokeRect(ox+col*cell+1,oy+row*cell+1,cell-2,cell-2);ctx.restore()
-        // 카운트
-        if(prog>0.5){const idx=row*w2+col+1;gText(String(idx),ox+col*cell+cell/2,oy+row*cell+cell/2,'rgba(255,255,255,0.4)',Math.min(10,cell-8),prog)}
+        if(prog>0.5){const idx=row*w2+col+1;gText(String(idx),ox+col*cell+cell/2,oy+row*cell+cell/2,'rgba(255,255,255,0.45)',Math.min(10,cell-8),prog)}
       }
     }
-    gText(`\uAC00\uB85C ${w2}`,cx,oy-14,'rgba(255,255,255,0.5)',12,p)
-    gText(`\uC138\uB85C ${h2}`,ox-20,cy,'rgba(255,255,255,0.5)',12,p)
-    if(p>0.8) gText(`${w2} \u00D7 ${h2} = ${w2*h2}`,cx,oy+h2*cell+22,GRN,18,easeOutCubic((p-0.8)/0.2))
+    if(p>0.35) gText(`③ 칸 하나씩 채우기`,cx,oy+h2*cell+29,VIO,12,easeOutCubic((p-0.35)/0.2))
+
+    // ④ 꼭짓점 강조 원
+    if(p>0.58){
+      const p4=easeOutCubic((p-0.58)/0.22)
+      gCircle(ox,oy,6,GRN,true,p4*0.7)
+      gCircle(ox+w2*cell,oy,6,GRN,true,p4*0.7)
+      gCircle(ox,oy+h2*cell,6,GRN,true,p4*0.7)
+      gCircle(ox+w2*cell,oy+h2*cell,6,GRN,true,p4*0.7)
+      gText(`④ 총 ${w2*h2}칸!`,cx,oy+h2*cell+43,GRN,13,p4)
+    }
+
+    // ⑤ 수식 결과
+    if(p>0.78){
+      const p5=easeOutCubic((p-0.78)/0.22)
+      gLine(cx-80,oy+h2*cell+56,cx+80,oy+h2*cell+56,GRN,1.5,p5*0.5)
+      gText(`⑤ ${w2} × ${h2} = ${w2*h2}`,cx,oy+h2*cell+68,GRN,18,p5)
+    }
     break
   }
 
   case 'area_square': {
     // E033: 정사각형 넓이 — 격자 + 제곱
-    const VIO='#534AB7',GRN='#1D9E75'
+    const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
     const a2=v('a',4)
-    const cell=Math.min(28,Math.min((W-60)/a2,(H-70)/a2))
-    const ox=cx-a2*cell/2,oy=cy-a2*cell/2-5
-    for(let row=0;row<a2;row++)for(let col=0;col<a2;col++){
-      const idx=row*a2+col;const prog=easeOutElastic(Math.min(1,Math.max(0,p*2-(idx/(a2*a2))*0.6)))
-      ctx.save();ctx.globalAlpha=prog*0.7;ctx.fillStyle=VIO+'55';ctx.strokeStyle=VIO;ctx.lineWidth=1.5
+    const cell=Math.min(26,Math.min((W-70)/a2,(H-95)/a2))
+    const ox=cx-a2*cell/2,oy=cy-a2*cell/2-14
+
+    // ① 정사각형 소개
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      gText(`① 한 변이 ${a2}인 정사각형`,cx,oy-20,VIO,13,p1)
+      // 변 길이 라벨선
+      gLine(ox,oy-10,ox+a2*cell,oy-10,VIO,2,p1*0.5)
+      gLine(ox-10,oy,ox-10,oy+a2*cell,VIO,2,p1*0.5)
+      gText(`${a2}`,cx,oy-22,VIO,13,p1)
+      gText(`${a2}`,ox-22,cy-14,VIO,13,p1)
+    }
+
+    // ② 격자선 그리기
+    if(p>0.15){
+      const p2=easeOutCubic((p-0.15)/0.18)
+      for(let col=0;col<=a2;col++) gLine(ox+col*cell,oy,ox+col*cell,oy+a2*cell,ORG,1,p2*0.35)
+      for(let row=0;row<=a2;row++) gLine(ox,oy+row*cell,ox+a2*cell,oy+row*cell,ORG,1,p2*0.35)
+      gText(`② 격자 ${a2}×${a2}`,cx,oy+a2*cell+14,ORG,12,p2)
+    }
+
+    // ③ 격자 셀 채우기
+    for(let row=0;row<a2;row++) for(let col=0;col<a2;col++){
+      const idx=row*a2+col
+      const prog=easeOutElastic(Math.min(1,Math.max(0,(p-0.28)*2.2-(idx/(a2*a2))*0.6)))
+      ctx.save();ctx.globalAlpha=prog*0.72;ctx.fillStyle=VIO+'55';ctx.strokeStyle=VIO;ctx.lineWidth=1.5
       ctx.fillRect(ox+col*cell+1,oy+row*cell+1,cell-2,cell-2);ctx.strokeRect(ox+col*cell+1,oy+row*cell+1,cell-2,cell-2);ctx.restore()
     }
-    ctx.save();ctx.globalAlpha=p*0.8;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=VIO;ctx.strokeRect(ox,oy,a2*cell,a2*cell);ctx.restore()
-    gText(`${a2}`,cx,oy-14,'rgba(255,255,255,0.5)',13,p)
-    gText(`${a2}`,ox-16,cy,'rgba(255,255,255,0.5)',13,p)
-    if(p>0.75) gText(`${a2} \u00D7 ${a2} = ${a2}\u00B2 = ${a2*a2}`,cx,oy+a2*cell+22,GRN,17,easeOutCubic((p-0.75)/0.25))
+    if(p>0.3) gText(`③ ${a2*a2}칸 채우기`,cx,oy+a2*cell+28,VIO,12,easeOutCubic((p-0.3)/0.2))
+
+    // ④ 외곽선 강조 + 꼭짓점 원
+    if(p>0.55){
+      const p4=easeOutCubic((p-0.55)/0.22)
+      ctx.save();ctx.globalAlpha=p4*0.85;ctx.strokeStyle=GRN;ctx.lineWidth=3;ctx.shadowBlur=12;ctx.shadowColor=GRN;ctx.strokeRect(ox,oy,a2*cell,a2*cell);ctx.restore()
+      gCircle(ox,oy,6,GRN,true,p4*0.7)
+      gCircle(ox+a2*cell,oy,6,GRN,true,p4*0.7)
+      gCircle(ox,oy+a2*cell,6,GRN,true,p4*0.7)
+      gCircle(ox+a2*cell,oy+a2*cell,6,GRN,true,p4*0.7)
+      gText(`④ 넓이 = ${a2}² = ${a2*a2}`,cx,oy+a2*cell+42,GRN,13,p4)
+    }
+
+    // ⑤ 제곱 공식
+    if(p>0.78){
+      const p5=easeOutCubic((p-0.78)/0.22)
+      gLine(cx-80,oy+a2*cell+55,cx+80,oy+a2*cell+55,GRN,1.5,p5*0.5)
+      gText(`⑤ ${a2} × ${a2} = ${a2}² = ${a2*a2}`,cx,oy+a2*cell+67,GRN,17,p5)
+    }
     break
   }
 
@@ -1110,29 +1508,68 @@ switch (type) {
   case 'area_triangle': {
     // E035: 삼각형 넓이 — 복제+뒤집기→직사각형
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-    const bw=v('w',150),bh=v('h',90),ox=cx-bw/2,oy=cy-bh/2-5
-    // 단계1: 삼각형
-    const drawTri=(flip:boolean,alpha:number,color:string,offX:number)=>{
+    const bw=v('w',140),bh=v('h',80),ox=cx-bw/2,oy=cy-bh/2-18
+
+    const drawTri=(flip:boolean,alpha:number,color:string)=>{
       ctx.save();ctx.globalAlpha=alpha*0.4;ctx.fillStyle=color
       ctx.beginPath()
-      if(!flip){ctx.moveTo(ox+offX,oy+bh);ctx.lineTo(ox+bw+offX,oy+bh);ctx.lineTo(ox+offX,oy)}
-      else{ctx.moveTo(ox+offX,oy);ctx.lineTo(ox+bw+offX,oy);ctx.lineTo(ox+bw+offX,oy+bh)}
+      if(!flip){ctx.moveTo(ox,oy+bh);ctx.lineTo(ox+bw,oy+bh);ctx.lineTo(ox,oy)}
+      else{ctx.moveTo(ox,oy);ctx.lineTo(ox+bw,oy);ctx.lineTo(ox+bw,oy+bh)}
       ctx.closePath();ctx.fill();ctx.restore()
-      ctx.save();ctx.globalAlpha=alpha*0.8;ctx.strokeStyle=color;ctx.lineWidth=2
+      ctx.save();ctx.globalAlpha=alpha*0.85;ctx.strokeStyle=color;ctx.lineWidth=2.5
       ctx.beginPath()
-      if(!flip){ctx.moveTo(ox+offX,oy+bh);ctx.lineTo(ox+bw+offX,oy+bh);ctx.lineTo(ox+offX,oy);ctx.closePath()}
-      else{ctx.moveTo(ox+offX,oy);ctx.lineTo(ox+bw+offX,oy);ctx.lineTo(ox+bw+offX,oy+bh);ctx.closePath()}
+      if(!flip){ctx.moveTo(ox,oy+bh);ctx.lineTo(ox+bw,oy+bh);ctx.lineTo(ox,oy);ctx.closePath()}
+      else{ctx.moveTo(ox,oy);ctx.lineTo(ox+bw,oy);ctx.lineTo(ox+bw,oy+bh);ctx.closePath()}
       ctx.stroke();ctx.restore()
     }
-    const p1=easeOutCubic(Math.min(1,p*2.5))
-    drawTri(false,p1,VIO,0)
-    // 단계2: 복제+뒤집기
-    if(p>0.35){const p2=easeOutCubic((p-0.35)/0.3);drawTri(true,p2,ORG,0)}
-    // 단계3: 직사각형 강조
-    if(p>0.65){const fp=easeOutCubic((p-0.65)/0.2)
-      ctx.save();ctx.globalAlpha=fp;ctx.strokeStyle=GRN;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=GRN;ctx.strokeRect(ox,oy,bw,bh);ctx.restore()}
-    // 단계4: 수식
-    if(p>0.8) gText('\uC9C1\uC0AC\uAC01\uD615\uC758 \uBC18 = \uBC11\uBCC0\u00D7\uB192\uC774\u00F72',cx,H-16,GRN,14,easeOutCubic((p-0.8)/0.2))
+
+    // ① 삼각형 등장
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.23)
+      drawTri(false,p1,VIO)
+      // 꼭짓점 원
+      gCircle(ox,oy+bh,6,VIO,true,p1*0.7)
+      gCircle(ox+bw,oy+bh,6,VIO,true,p1*0.7)
+      gCircle(ox,oy,6,VIO,true,p1*0.7)
+      gText(`① 삼각형: 밑변=${bw/10}, 높이=${bh/10}`,cx,oy-18,VIO,13,p1)
+    }
+
+    // ② 높이선(수직선) 표시
+    if(p>0.22){
+      const p2=easeOutCubic((p-0.22)/0.18)
+      gLine(ox,oy,ox,oy+bh,ORG,2,p2*0.7)
+      gLine(ox,oy+bh-10,ox+10,oy+bh-10,ORG,1.5,p2*0.6)
+      gLine(ox+10,oy+bh-10,ox+10,oy+bh,ORG,1.5,p2*0.6)
+      gText(`높이`,ox-22,cy-18,ORG,12,p2)
+      gLine(ox,oy+bh+10,ox+bw,oy+bh+10,GRN,2,p2*0.5)
+      gText(`밑변`,cx,oy+bh+22,GRN,12,p2)
+      gText(`② 높이와 밑변 확인`,cx,oy-30,ORG,12,p2)
+    }
+
+    // ③ 복제+뒤집기 등장
+    if(p>0.38){
+      const p3=easeOutCubic((p-0.38)/0.22)
+      drawTri(true,p3,ORG)
+      gText(`③ 똑같은 삼각형 뒤집어 붙이기`,cx,oy+bh+36,ORG,12,p3)
+    }
+
+    // ④ 직사각형 강조
+    if(p>0.6){
+      const p4=easeOutCubic((p-0.6)/0.2)
+      ctx.save();ctx.globalAlpha=p4*0.9;ctx.strokeStyle=GRN;ctx.lineWidth=3;ctx.shadowBlur=12;ctx.shadowColor=GRN;ctx.strokeRect(ox,oy,bw,bh);ctx.restore()
+      gCircle(ox,oy,5,GRN,true,p4*0.7)
+      gCircle(ox+bw,oy,5,GRN,true,p4*0.7)
+      gCircle(ox,oy+bh,5,GRN,true,p4*0.7)
+      gCircle(ox+bw,oy+bh,5,GRN,true,p4*0.7)
+      gText(`④ 합치면 직사각형!`,cx,oy+bh+50,GRN,13,p4)
+    }
+
+    // ⑤ 넓이 공식
+    if(p>0.8){
+      const p5=easeOutCubic((p-0.8)/0.2)
+      gLine(cx-100,oy+bh+64,cx+100,oy+bh+64,GRN,1.5,p5*0.5)
+      gText(`⑤ 넓이 = 밑변×높이÷2`,cx,oy+bh+76,GRN,14,p5)
+    }
     break
   }
 
@@ -1213,24 +1650,62 @@ switch (type) {
   case 'circumference': {
     // E039: 원의 둘레 — 원 굴리기
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-    const rr=Math.min(35,H*0.18)
+    const rr=v('r',35)>0?Math.min(40,v('r',35)):Math.min(35,H*0.18)
     const circumLen=2*Math.PI*rr
-    const rollP=easeOutCubic(Math.min(1,Math.max(0,(p-0.2)/0.6)))
-    const startX=cx-circumLen/2,rollX=startX+rollP*circumLen
-    const groundY=cy+20
-    // 지면 선
-    gLine(startX-10,groundY+rr,startX+circumLen+30,groundY+rr,'rgba(255,255,255,0.15)',1.5,p)
-    // 굴러가는 원
+    const rollP=easeOutCubic(Math.min(1,Math.max(0,(p-0.22)/0.58)))
+    const startX=cx-circumLen/2, rollX=startX+rollP*circumLen
+    const groundY=cy+10
     const angle=rollP*Math.PI*2
-    ctx.save();ctx.globalAlpha=p*0.8;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=VIO
-    ctx.beginPath();ctx.arc(rollX,groundY,rr,0,Math.PI*2);ctx.stroke();ctx.restore()
-    // 반지름 표시 (회전)
-    gLine(rollX,groundY,rollX+Math.cos(angle)*rr,groundY-Math.sin(angle)*rr,ORG,2,p*0.7)
-    gText('r',rollX+10,groundY-rr-8,ORG,11,p)
-    // 굴러간 거리 강조
-    if(rollP>0.1) gLine(startX,groundY+rr+8,rollX,groundY+rr+8,GRN,3,rollP)
-    // 수식
-    if(p>0.8) gText(`\uC6D0\uC8FC = 2 \u00D7 r \u00D7 3.14`,cx,H-16,GRN,15,easeOutCubic((p-0.8)/0.2))
+
+    // ① 원 + 반지름 소개
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.2)
+      ctx.save();ctx.globalAlpha=p1*0.8;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=VIO
+      ctx.beginPath();ctx.arc(startX,groundY,rr,0,Math.PI*2);ctx.stroke();ctx.restore()
+      gLine(startX,groundY,startX+rr,groundY,ORG,2.5,p1*0.8)
+      gCircle(startX,groundY,4,ORG,true,p1*0.8)
+      gText(`r=${r(rr/10,1)}`,startX+rr/2,groundY-12,ORG,13,p1)
+      gText(`① 반지름 r 확인`,cx,groundY-rr-18,VIO,13,p1)
+    }
+
+    // ② 지름선 표시
+    if(p>0.18){
+      const p2=easeOutCubic((p-0.18)/0.18)
+      gLine(startX-rr,groundY,startX+rr,groundY,GRN,2,p2*0.6)
+      gText(`지름 = 2r`,startX,groundY+14,GRN,12,p2)
+      gText(`② 지름 = 반지름×2`,cx,groundY-rr-30,GRN,12,p2)
+    }
+
+    // ③ 지면선 + 굴러가는 원
+    if(p>0.2){
+      const p3=easeOutCubic((p-0.2)/0.15)
+      gLine(startX-10,groundY+rr,startX+circumLen+20,groundY+rr,'rgba(255,255,255,0.2)',1.5,p3)
+      gText(`③ 원을 굴려서 둘레 측정!`,cx,groundY+rr+18,ORG,12,p3)
+    }
+
+    // 굴러가는 원 그리기
+    if(p>0.22){
+      ctx.save();ctx.globalAlpha=Math.min(1,(p-0.22)*5)*0.85;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=VIO
+      ctx.beginPath();ctx.arc(rollX,groundY,rr,0,Math.PI*2);ctx.stroke();ctx.restore()
+      // 반지름 회전 표시
+      gLine(rollX,groundY,rollX+Math.cos(angle)*rr,groundY-Math.sin(angle)*rr,ORG,2.5,0.8)
+      gCircle(rollX,groundY,4,VIO,true,0.7)
+    }
+
+    // ④ 굴러간 거리 강조
+    if(rollP>0.08){
+      gLine(startX,groundY+rr+10,rollX,groundY+rr+10,GRN,3.5,rollP)
+      gCircle(startX,groundY+rr+10,5,GRN,true,rollP*0.7)
+      gCircle(rollX,groundY+rr+10,5,GRN,true,rollP*0.7)
+      if(rollP>0.4) gText(`④ 굴러간 거리 = 원주`,cx,groundY+rr+32,GRN,12,easeOutCubic((rollP-0.4)/0.3))
+    }
+
+    // ⑤ 원주 공식 결과
+    if(p>0.82){
+      const p5=easeOutCubic((p-0.82)/0.18)
+      gLine(cx-100,groundY+rr+46,cx+100,groundY+rr+46,GRN,1.5,p5*0.5)
+      gText(`⑤ 원주 = 2 × r × 3.14`,cx,groundY+rr+58,GRN,15,p5)
+    }
     break
   }
 
@@ -1270,22 +1745,66 @@ switch (type) {
     // E041: 직육면체 겉넓이 — 면 떼어내기
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
     const a2=v('a',4),b2=v('b',3),c2=v('c',2)
-    const sc=Math.min(14,Math.min((W-80)/8,(H-60)/6))
+    const sc=Math.min(14,Math.min((W-80)/8,(H-80)/6))
     const faces=[
-      {label:`\uC55E ${a2}\u00D7${c2}`,w:a2,h:c2,color:VIO,area:a2*c2},
-      {label:`\uC704 ${a2}\u00D7${b2}`,w:a2,h:b2,color:GRN,area:a2*b2},
-      {label:`\uC608 ${b2}\u00D7${c2}`,w:b2,h:c2,color:ORG,area:b2*c2},
+      {label:`앞 ${a2}×${c2}`,w:a2,h:c2,color:VIO,area:a2*c2},
+      {label:`위 ${a2}×${b2}`,w:a2,h:b2,color:GRN,area:a2*b2},
+      {label:`옆 ${b2}×${c2}`,w:b2,h:c2,color:ORG,area:b2*c2},
     ]
+    const total=2*(a2*c2+a2*b2+b2*c2)
+
+    // ① 직육면체 소개
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      gText(`① 직육면체 ${a2}×${b2}×${c2}`,cx,24,VIO,14,p1)
+      // 간단한 육면체 아이소 스케치
+      const bx=cx-20,by=38,bw=40,bh=24,dep=12
+      gLine(bx,by+bh,bx+bw,by+bh,VIO,1.5,p1*0.5)
+      gLine(bx+bw,by,bx+bw,by+bh,VIO,1.5,p1*0.5)
+      gLine(bx,by,bx+bw,by,VIO,1.5,p1*0.5)
+      gLine(bx,by,bx,by+bh,VIO,1.5,p1*0.5)
+      gLine(bx,by,bx+dep,by-dep,VIO,1,p1*0.4)
+      gLine(bx+bw,by,bx+bw+dep,by-dep,VIO,1,p1*0.4)
+      gLine(bx+bw+dep,by-dep,bx+dep,by-dep,VIO,1,p1*0.4)
+    }
+
+    // ② 면 분리 표시
+    if(p>0.18){
+      const p2=easeOutCubic((p-0.18)/0.15)
+      gText(`② 6개 면을 펼쳐보기`,cx,62,ORG,13,p2)
+    }
+
+    // ③ 각 면 사각형 + 면 윤곽선
     faces.forEach((f,i)=>{
-      const prog=easeOutCubic(Math.min(1,Math.max(0,p*3-i*0.6)))
-      const fx=W*0.15+i*W*0.28,fy=cy-f.h*sc/2
+      const prog=easeOutCubic(Math.min(1,Math.max(0,(p-0.28)*3-i*0.55)))
+      const fx=W*0.13+i*W*0.29,fy=cy-f.h*sc/2+10
       ctx.save();ctx.globalAlpha=prog*0.35;ctx.fillStyle=f.color;ctx.fillRect(fx,fy,f.w*sc,f.h*sc);ctx.restore()
-      ctx.save();ctx.globalAlpha=prog*0.9;ctx.strokeStyle=f.color;ctx.lineWidth=2;ctx.strokeRect(fx,fy,f.w*sc,f.h*sc);ctx.restore()
-      gText(f.label,fx+f.w*sc/2,fy-12,f.color,11,prog)
-      gText(`=${f.area}`,fx+f.w*sc/2,fy+f.h*sc+14,f.color,12,prog)
+      ctx.save();ctx.globalAlpha=prog*0.9;ctx.strokeStyle=f.color;ctx.lineWidth=2.5;ctx.strokeRect(fx,fy,f.w*sc,f.h*sc);ctx.restore()
+      // 모서리 원
+      if(prog>0.5){
+        gCircle(fx,fy,4,f.color,true,prog*0.6)
+        gCircle(fx+f.w*sc,fy+f.h*sc,4,f.color,true,prog*0.6)
+      }
+      // 면 내부 대각선
+      gLine(fx,fy,fx+f.w*sc,fy+f.h*sc,f.color,1,prog*0.2)
+      gText(f.label,fx+f.w*sc/2,fy-13,f.color,11,prog)
+      gText(`=${f.area}`,fx+f.w*sc/2,fy+f.h*sc+15,f.color,13,prog)
     })
-    if(p>0.7){const fp=easeOutCubic((p-0.7)/0.3);const total=2*(a2*c2+a2*b2+b2*c2)
-      gText(`\u00D72 \u2192 \uAC89\uB113\uC774 = ${total}`,cx,H-16,GRN,15,fp)}
+    if(p>0.42) gText(`③ 면마다 넓이 계산`,cx,H-52,ORG,12,easeOutCubic((p-0.42)/0.2))
+
+    // ④ ×2 이유 설명
+    if(p>0.62){
+      const p4=easeOutCubic((p-0.62)/0.2)
+      gLine(W*0.13,cy+faces[0].h*sc/2+28,W*0.13+W*0.6,cy+faces[0].h*sc/2+28,'rgba(255,255,255,0.25)',1.5,p4)
+      gText(`④ 각 면은 반대쪽에도 있어 → ×2`,cx,H-38,GRN,13,p4)
+    }
+
+    // ⑤ 겉넓이 합계
+    if(p>0.78){
+      const p5=easeOutCubic((p-0.78)/0.22)
+      gLine(cx-100,H-26,cx+100,H-26,GRN,1.5,p5*0.5)
+      gText(`⑤ 겉넓이 = ${total}`,cx,H-14,GRN,15,p5)
+    }
     break
   }
 
@@ -1293,24 +1812,63 @@ switch (type) {
     // E042: 직육면체 부피 — 층 쌓기
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
     const a2=v('a',4),b2=v('b',3),c2=v('c',3)
-    const sc=Math.min(18,Math.min((W-60)/(a2+2),(H-60)/(b2+c2)))
+    const sc=Math.min(18,Math.min((W-60)/(a2+2),(H-80)/(b2+c2)))
     const isoX=0.7,isoY=0.35
     const ox=cx-(a2*sc)/2,baseY=cy+c2*sc*isoY
-    // 층별 쌓기
+
+    // ① 직육면체 소개
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      gText(`① 직육면체 ${a2}×${b2}×${c2}`,cx,20,VIO,14,p1)
+      // 바닥 테두리선
+      gLine(ox,baseY,ox+a2*sc,baseY,VIO,1.5,p1*0.5)
+      gLine(ox,baseY,ox+b2*sc*isoX*0.3,baseY-b2*sc*isoY*0.5,VIO,1.5,p1*0.5)
+      gCircle(ox,baseY,5,VIO,true,p1*0.6)
+    }
+
+    // ② 바닥 면 강조
+    if(p>0.15){
+      const p2=easeOutCubic((p-0.15)/0.18)
+      gLine(ox,baseY,ox+a2*sc,baseY,GRN,2,p2*0.6)
+      gLine(ox+a2*sc,baseY,ox+a2*sc+b2*sc*isoX*0.3,baseY-b2*sc*isoY*0.5,GRN,2,p2*0.6)
+      gText(`② 바닥 = ${a2}×${b2}=${a2*b2}`,cx,baseY+16,GRN,12,p2)
+    }
+
+    // ③ 층별 쌓기
     for(let layer=0;layer<c2;layer++){
-      const layerP=easeOutCubic(Math.min(1,Math.max(0,p*(c2+1)-layer*0.7)))
+      const layerP=easeOutCubic(Math.min(1,Math.max(0,(p-0.28)*(c2+1)-layer*0.7)))
       if(layerP<=0) continue
-      for(let row=0;row<b2;row++)for(let col=0;col<a2;col++){
+      for(let row=0;row<b2;row++) for(let col=0;col<a2;col++){
         const x=ox+col*sc+row*sc*isoX*0.3
         const y=baseY-layer*sc*isoY-row*sc*isoY*0.5
         const prog=layerP*easeOutCubic(Math.min(1,Math.max(0,layerP*2-(row*a2+col)/(a2*b2)*0.5)))
-        ctx.save();ctx.globalAlpha=prog*0.6;ctx.fillStyle=[VIO,GRN,ORG][layer%3]+'66';ctx.strokeStyle=[VIO,GRN,ORG][layer%3]
-        ctx.lineWidth=1;ctx.fillRect(x,y,sc-1,sc*isoY);ctx.strokeRect(x,y,sc-1,sc*isoY);ctx.restore()
+        ctx.save();ctx.globalAlpha=prog*0.65;ctx.fillStyle=[VIO,GRN,ORG][layer%3]+'66';ctx.strokeStyle=[VIO,GRN,ORG][layer%3]
+        ctx.lineWidth=1.5;ctx.fillRect(x,y,sc-1,sc*isoY);ctx.strokeRect(x,y,sc-1,sc*isoY);ctx.restore()
       }
-      if(layerP>0.5) gText(`${layer+1}\uCE35`,ox+a2*sc+20,baseY-layer*sc*isoY-b2*sc*isoY*0.25,'rgba(255,255,255,0.4)',10,layerP)
+      if(layerP>0.5){
+        gText(`${layer+1}층`,ox+a2*sc+22,baseY-layer*sc*isoY-b2*sc*isoY*0.25,[VIO,GRN,ORG][layer%3],11,layerP)
+        // 층 꼭짓점 원
+        gCircle(ox+a2*sc,baseY-layer*sc*isoY,4,[VIO,GRN,ORG][layer%3],true,layerP*0.6)
+      }
     }
-    gText(`${a2}`,cx,baseY+18,'rgba(255,255,255,0.5)',12,p)
-    if(p>0.8) gText(`${a2}\u00D7${b2}\u00D7${c2} = ${a2*b2*c2}`,cx,H-16,GRN,16,easeOutCubic((p-0.8)/0.2))
+    if(p>0.32) gText(`③ 층마다 ${a2*b2}개 × ${c2}층`,cx,baseY+30,ORG,12,easeOutCubic((p-0.32)/0.2))
+
+    // ④ 가로/세로/높이 라벨
+    if(p>0.55){
+      const p4=easeOutCubic((p-0.55)/0.22)
+      gLine(ox,baseY+8,ox+a2*sc,baseY+8,VIO,2,p4*0.5)
+      gText(`${a2}`,cx,baseY+20,VIO,12,p4)
+      gLine(ox-8,baseY,ox-8,baseY-c2*sc*isoY,GRN,2,p4*0.5)
+      gText(`높이${c2}`,ox-24,baseY-c2*sc*isoY/2,GRN,11,p4)
+      gText(`④ 가로×세로×높이`,cx,20,ORG,13,p4)
+    }
+
+    // ⑤ 부피 공식 결과
+    if(p>0.78){
+      const p5=easeOutCubic((p-0.78)/0.22)
+      gLine(cx-90,H-26,cx+90,H-26,GRN,1.5,p5*0.5)
+      gText(`⑤ ${a2}×${b2}×${c2} = ${a2*b2*c2}`,cx,H-14,GRN,16,p5)
+    }
     break
   }
 
@@ -1319,25 +1877,67 @@ switch (type) {
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
     const nums=[v('a',2),v('b',6),v('c',4),v('d',8)]
     const avg=nums.reduce((a3,b3)=>a3+b3,0)/nums.length
-    const maxH=100,barW=36,gap2=14
-    const totalW2=nums.length*(barW+gap2)-gap2,ox=cx-totalW2/2,baseY=cy+maxH/2+10
+    const sum=nums.reduce((a3,b3)=>a3+b3,0)
+    const maxH=90,barW=34,gap2=12
+    const totalW2=nums.length*(barW+gap2)-gap2,ox=cx-totalW2/2,baseY=cy+maxH/2+5
     const colors=[VIO,GRN,ORG,'#D85A30']
-    // 단계1~3: 막대 표시 → 녹아서 균등 분배
-    const flatP=easeOutCubic(Math.min(1,Math.max(0,(p-0.5)*2.5)))
+
+    // ① 데이터 막대 등장
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      gText(`① 자료: ${nums.join(', ')}`,cx,baseY-maxH-22,VIO,13,p1)
+      // 기준선 + 세로 축선
+      gLine(ox-4,baseY,ox+totalW2+4,baseY,'rgba(255,255,255,0.3)',2,p1)
+      gLine(ox-4,baseY-maxH-10,ox-4,baseY,'rgba(255,255,255,0.2)',1.5,p1)
+      // 가로 눈금선
+      gLine(ox-12,baseY-(avg/10)*maxH-1,ox,baseY-(avg/10)*maxH-1,'rgba(255,255,255,0.2)',1.5,p1)
+    }
+
+    const flatP=easeOutCubic(Math.min(1,Math.max(0,(p-0.52)*2.5)))
     nums.forEach((n2,i)=>{
       const origH=(n2/10)*maxH,avgH=(avg/10)*maxH
       const curH=origH+(avgH-origH)*flatP
       const x=ox+i*(barW+gap2)
-      const prog=easeOutCubic(Math.min(1,p*3-i*0.3))
-      ctx.save();ctx.globalAlpha=prog*0.7;ctx.fillStyle=colors[i%4]+'66';ctx.strokeStyle=colors[i%4]
-      ctx.lineWidth=2;ctx.shadowBlur=6;ctx.shadowColor=colors[i%4]
+      const prog=easeOutCubic(Math.min(1,(p-0.05)*3-i*0.3))
+      ctx.save();ctx.globalAlpha=prog*0.72;ctx.fillStyle=colors[i%4]+'66';ctx.strokeStyle=colors[i%4]
+      ctx.lineWidth=2.5;ctx.shadowBlur=6;ctx.shadowColor=colors[i%4]
       ctx.fillRect(x,baseY-curH,barW,curH);ctx.strokeRect(x,baseY-curH,barW,curH);ctx.restore()
-      gText(String(n2),x+barW/2,baseY+16,colors[i%4],12,prog)
+      gText(String(n2),x+barW/2,baseY+16,colors[i%4],13,prog)
+      // 데이터 점
+      if(prog>0.5) gCircle(x+barW/2,baseY-origH,5,colors[i%4],true,prog*0.7)
     })
-    // 단계4: 평균선
-    if(p>0.6){const lp=easeOutCubic((p-0.6)/0.25);const avgY=baseY-(avg/10)*maxH
-      gLine(ox-8,avgY,ox+totalW2+8,avgY,GRN,2.5,lp)
-      gText(`\uD3C9\uADE0 = ${avg}`,cx,avgY-14,GRN,15,lp)}
+    if(p>0.1) gText(`② 막대로 데이터 비교`,cx,baseY-maxH-36,ORG,12,easeOutCubic((p-0.1)/0.2))
+
+    // ③ 합계 표시
+    if(p>0.32){
+      const p3=easeOutCubic((p-0.32)/0.2)
+      gText(`③ 합계 = ${nums.join('+')} = ${sum}`,cx,baseY+30,VIO,13,p3)
+      // 합계 연결선
+      gLine(ox,baseY+42,ox+totalW2,baseY+42,VIO,1.5,p3*0.5)
+    }
+
+    // ④ 균등 분배 과정
+    if(p>0.5){
+      const p4=easeOutCubic((p-0.5)/0.18)
+      gText(`④ 균등하게 나누는 중...`,cx,baseY-maxH-50,GRN,12,p4)
+    }
+
+    // 평균선
+    if(p>0.58){
+      const lp=easeOutCubic((p-0.58)/0.25)
+      const avgY=baseY-(avg/10)*maxH
+      gLine(ox-10,avgY,ox+totalW2+10,avgY,GRN,3,lp)
+      gCircle(ox-10,avgY,5,GRN,true,lp*0.7)
+      gCircle(ox+totalW2+10,avgY,5,GRN,true,lp*0.7)
+      gText(`평균 = ${avg}`,cx,avgY-16,GRN,15,lp)
+    }
+
+    // ⑤ 평균 공식
+    if(p>0.8){
+      const p5=easeOutCubic((p-0.8)/0.2)
+      gLine(cx-100,baseY+44,cx+100,baseY+44,GRN,1.5,p5*0.5)
+      gText(`⑤ 평균 = 합계(${sum}) ÷ 개수(${nums.length}) = ${avg}`,cx,baseY+56,GRN,13,p5)
+    }
     break
   }
 
@@ -1383,18 +1983,78 @@ switch (type) {
   case 'unit_length': {
     // E046: 길이 단위 — 줌아웃
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-    const units=[{name:'1mm',scale:1,color:VIO},{name:'1cm = 10mm',scale:10,color:GRN},{name:'1m = 100cm',scale:100,color:ORG},{name:'1km = 1000m',scale:1000,color:'#1D9E75'}]
-    const stageIdx=Math.min(3,Math.floor(p*4.5))
+    const units=[
+      {name:'1mm',scale:1,color:VIO,desc:'가장 작은 단위'},
+      {name:'1cm = 10mm',scale:10,color:GRN,desc:'손가락 한 마디'},
+      {name:'1m = 100cm',scale:100,color:ORG,desc:'어른 키 정도'},
+      {name:'1km = 1000m',scale:1000,color:'#1D9E75',desc:'걸어서 약 15분'},
+    ]
+    const stageIdx=Math.min(3,Math.floor(p*4.8))
+
+    // ① 첫 단위(mm) 등장
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      gText(`① 길이 단위 변환 알아보기`,cx,18,VIO,14,p1)
+    }
+
     units.forEach((u,i)=>{
       if(i>stageIdx) return
       const prog=easeOutCubic(Math.min(1,(p-i*0.22)/0.25))
-      const y=30+i*48,barW=Math.min(W*0.6,200)*(1-i*0.15)
-      const ox=cx-barW/2
-      ctx.save();ctx.globalAlpha=prog*0.4;ctx.fillStyle=u.color+'55';ctx.strokeStyle=u.color;ctx.lineWidth=2
-      ctx.fillRect(ox,y,barW*prog,24);ctx.strokeRect(ox,y,barW,24);ctx.restore()
-      gText(u.name,cx,y+12,u.color,13,prog)
-      if(i>0) gText(`\u00D7${units[i].scale/units[i-1].scale}`,ox-30,y+12,'rgba(255,255,255,0.3)',10,prog)
+      const y=38+i*48,barW=Math.min(W*0.58,196)*(1-i*0.12)
+      const bx=cx-barW/2
+
+      ctx.save();ctx.globalAlpha=prog*0.4;ctx.fillStyle=u.color+'55';ctx.strokeStyle=u.color;ctx.lineWidth=2.5
+      ctx.fillRect(bx,y,barW*prog,26);ctx.strokeRect(bx,y,barW,26);ctx.restore()
+
+      // 막대 왼쪽/오른쪽 끝선
+      gLine(bx,y-3,bx,y+30,u.color,1.5,prog*0.5)
+      gLine(bx+barW,y-3,bx+barW,y+30,u.color,1.5,prog*0.5)
+
+      gText(u.name,cx,y+13,u.color,13,prog)
+
+      // 단위 설명 작은 원
+      if(prog>0.5) gCircle(bx-12,y+13,5,u.color,true,prog*0.65)
+
+      // 변환 배수 + 화살표선
+      if(i>0){
+        const prev=units[i-1]
+        const mult=u.scale/prev.scale
+        gText(`×${mult}`,bx-38,y+13,'rgba(255,255,255,0.5)',11,prog)
+        gLine(bx-30,y+13,bx-15,y+13,u.color,1.5,prog*0.5)
+      }
+
+      // 설명
+      if(prog>0.6) gText(u.desc,cx,y+30,'rgba(255,255,255,0.3)',10,prog*0.8)
     })
+
+    // ② 단위 스케일 그림
+    if(p>0.22){
+      const p2=easeOutCubic((p-0.22)/0.18)
+      gText(`② mm → cm → m → km 순서`,cx,H-40,ORG,12,p2)
+    }
+
+    // ③ 연결 세로선
+    if(p>0.42){
+      const p3=easeOutCubic((p-0.42)/0.18)
+      gLine(cx-100,38,cx-100,38+3*48+26,'rgba(255,255,255,0.12)',1,p3)
+    }
+
+    // ④ 단위 비교 강조
+    if(p>0.62){
+      const p4=easeOutCubic((p-0.62)/0.2)
+      // 단위 계층 원
+      gCircle(cx+100,62,8,VIO,true,p4*0.6)
+      gCircle(cx+100,110,10,GRN,true,p4*0.6)
+      gLine(cx+100,70,cx+100,100,VIO,1.5,p4*0.4)
+      gText(`④ 10배씩 커지는 단위들`,cx,H-28,GRN,13,p4)
+    }
+
+    // ⑤ 정리
+    if(p>0.82){
+      const p5=easeOutCubic((p-0.82)/0.18)
+      gLine(cx-120,H-16,cx+120,H-16,GRN,1.5,p5*0.5)
+      gText(`⑤ 1km=1000m=100000cm=1000000mm`,cx,H-4,GRN,11,p5)
+    }
     break
   }
 
@@ -1476,29 +2136,69 @@ switch (type) {
   case 'time_clock': {
     // E050: 시각과 시간 — 아날로그 시계
     const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-    const clockR=Math.min(80,Math.min(W,H)*0.3)
-    // 시계 원판
-    ctx.save();ctx.globalAlpha=p*0.1;ctx.fillStyle=WHITE;ctx.beginPath();ctx.arc(cx,cy,clockR,0,Math.PI*2);ctx.fill();ctx.restore()
-    ctx.save();ctx.globalAlpha=p*0.6;ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(cx,cy,clockR,0,Math.PI*2);ctx.stroke();ctx.restore()
-    // 눈금 (12개)
-    for(let i=0;i<12;i++){const angle=-Math.PI/2+i*Math.PI/6;const isMajor=[0,3,6,9].includes(i)
-      const inner=clockR*(isMajor?0.78:0.85),outer=clockR*0.92
-      gLine(cx+Math.cos(angle)*inner,cy+Math.sin(angle)*inner,cx+Math.cos(angle)*outer,cy+Math.sin(angle)*outer,'rgba(255,255,255,0.3)',isMajor?2.5:1,p)
-      if(isMajor) gText(String(i===0?12:i===3?3:i===6?6:9),cx+Math.cos(angle)*clockR*0.68,cy+Math.sin(angle)*clockR*0.68,'rgba(255,255,255,0.5)',12,p)}
-    // 바늘 애니메이션: 3시 → 3시30분
-    const targetMin=p<0.5?0:v('m',30)*easeOutCubic((p-0.5)/0.4)
-    const hourAngle=-Math.PI/2+(v('h',3)+targetMin/60)*Math.PI/6
+    const clockR=Math.min(76,Math.min(W,H)*0.28)
+    const hourVal=v('h',3), minVal=v('m',30)
+    const cy2=cy-8
+
+    // ① 시계 원판 등장
+    if(p>0.02){
+      const p1=easeOutCubic((p-0.02)/0.18)
+      ctx.save();ctx.globalAlpha=p1*0.1;ctx.fillStyle=WHITE;ctx.beginPath();ctx.arc(cx,cy2,clockR,0,Math.PI*2);ctx.fill();ctx.restore()
+      ctx.save();ctx.globalAlpha=p1*0.65;ctx.strokeStyle='rgba(255,255,255,0.45)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(cx,cy2,clockR,0,Math.PI*2);ctx.stroke();ctx.restore()
+      gCircle(cx,cy2,clockR,VIO,false,p1*0.3)
+      gText(`① 시계 원판`,cx,cy2+clockR+16,VIO,12,p1)
+    }
+
+    // ② 눈금 (12개) + 숫자
+    if(p>0.15){
+      const p2=easeOutCubic((p-0.15)/0.2)
+      for(let i=0;i<12;i++){
+        const angle=-Math.PI/2+i*Math.PI/6
+        const isMajor=[0,3,6,9].includes(i)
+        const inner=clockR*(isMajor?0.76:0.84), outer=clockR*0.92
+        gLine(cx+Math.cos(angle)*inner,cy2+Math.sin(angle)*inner,cx+Math.cos(angle)*outer,cy2+Math.sin(angle)*outer,'rgba(255,255,255,0.4)',isMajor?2.5:1,p2)
+        if(isMajor){
+          const numVal=i===0?12:i===3?3:i===6?6:9
+          gText(String(numVal),cx+Math.cos(angle)*clockR*0.66,cy2+Math.sin(angle)*clockR*0.66,'rgba(255,255,255,0.7)',13,p2)
+          // 주요 숫자 원
+          gCircle(cx+Math.cos(angle)*clockR*0.88,cy2+Math.sin(angle)*clockR*0.88,3,ORG,true,p2*0.5)
+        }
+      }
+      gText(`② 12개 눈금 표시`,cx,cy2+clockR+30,ORG,12,p2)
+    }
+
+    // ③ 시침 등장
+    if(p>0.32){
+      const p3=easeOutCubic((p-0.32)/0.2)
+      const hourAngle=-Math.PI/2+hourVal*Math.PI/6
+      gLine(cx,cy2,cx+Math.cos(hourAngle)*clockR*0.5,cy2+Math.sin(hourAngle)*clockR*0.5,VIO,5,p3)
+      gText(`③ 시침: ${hourVal}시`,cx,cy2+clockR+44,VIO,12,p3)
+    }
+
+    // ④ 분침 회전 애니메이션
+    const targetMin=p<0.52?0:minVal*easeOutCubic((p-0.52)/0.38)
+    const hourAngle=-Math.PI/2+(hourVal+targetMin/60)*Math.PI/6
     const minAngle=-Math.PI/2+targetMin*Math.PI/30
-    // 시침
-    gLine(cx,cy,cx+Math.cos(hourAngle)*clockR*0.5,cy+Math.sin(hourAngle)*clockR*0.5,VIO,4,p*0.9)
-    // 분침
-    gLine(cx,cy,cx+Math.cos(minAngle)*clockR*0.72,cy+Math.sin(minAngle)*clockR*0.72,GRN,2.5,p*0.9)
+
+    if(p>0.32){
+      gLine(cx,cy2,cx+Math.cos(hourAngle)*clockR*0.5,cy2+Math.sin(hourAngle)*clockR*0.5,VIO,5,Math.min(1,(p-0.32)/0.2))
+    }
+    if(p>0.52){
+      const p4=easeOutCubic((p-0.52)/0.2)
+      gLine(cx,cy2,cx+Math.cos(minAngle)*clockR*0.73,cy2+Math.sin(minAngle)*clockR*0.73,GRN,3,p4)
+      gText(`④ 분침 회전: ${Math.round(targetMin)}분`,cx,cy2+clockR+58,GRN,12,p4)
+    }
+
     // 중심점
-    gCircle(cx,cy,4,ORG,true,p)
-    // 시각 표시
-    const displayMin=Math.round(targetMin)
-    gText(`${v('h',3)}\uC2DC ${displayMin<10?'0'+displayMin:displayMin}\uBD84`,cx,cy+clockR+20,GRN,16,p)
-    if(p>0.5&&p<0.9) gText(`${displayMin}\uBD84 \uC9C0\uB0A8`,cx,cy+clockR+38,'rgba(255,255,255,0.4)',12,easeOutCubic((p-0.5)/0.3))
+    gCircle(cx,cy2,5,ORG,true,p)
+
+    // ⑤ 시각 표시
+    if(p>0.78){
+      const p5=easeOutCubic((p-0.78)/0.22)
+      const displayMin=Math.round(targetMin)
+      gLine(cx-70,cy2+clockR+72,cx+70,cy2+clockR+72,GRN,1.5,p5*0.5)
+      gText(`⑤ ${hourVal}시 ${displayMin<10?'0'+displayMin:displayMin}분`,cx,cy2+clockR+82,GRN,18,p5)
+    }
     break
   }
 
@@ -1555,23 +2255,53 @@ switch (type) {
     }
 
     case 'integer_calc_mul': {
-      // M003: 정수 곱셈 부호 규칙 — 2×2 표
+      // M003: 정수 곱셈 부호 규칙 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const cellSz=55,ox=cx-cellSz*1.2,oy=cy-cellSz*0.8
+      const a=v('a',3),b=v('b',-4)
+      const cellSz=52,ox=cx-cellSz*1.15,oy=cy-cellSz*0.9
       const signs=[['+','+'],['+','-'],['-','+'],['-','-']]
       const results=['+','-','-','+']
       const colors=[GRN,ORG,ORG,GRN]
-      // 헤더
-      gText('+',ox+cellSz*0.5,oy-20,GRN,14,p);gText('-',ox+cellSz*1.5+10,oy-20,ORG,14,p)
-      gText('+',ox-20,oy+cellSz*0.5,GRN,14,p);gText('-',ox-20,oy+cellSz*1.5+10,ORG,14,p)
+
+      // ① 제목 등장
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.18)
+        gText('① 부호 규칙표',cx,18,WHITE,15,p1)
+        gLine(cx-80,28,cx+80,28,MINT,1.5,p1*0.5)}
+
+      // ② 헤더 축선 등장
+      if(p>0.1){const p2=easeOutCubic((p-0.1)/0.2)
+        gLine(ox-8,oy-30,ox+cellSz*2+18,oy-30,'rgba(255,255,255,0.25)',1,p2)
+        gLine(ox-30,oy-8,ox-30,oy+cellSz*2+18,'rgba(255,255,255,0.25)',1,p2)
+        gText('+',ox+cellSz*0.5,oy-18,GRN,15,p2)
+        gText('-',ox+cellSz*1.5+10,oy-18,ORG,15,p2)
+        gText('+',ox-18,oy+cellSz*0.5,GRN,15,p2)
+        gText('-',ox-18,oy+cellSz*1.5+10,ORG,15,p2)
+        gText('②',ox-28,oy-18,'rgba(255,255,255,0.4)',11,p2)}
+
+      // ③ 4칸 순서대로 등장
       for(let r2=0;r2<2;r2++)for(let c2=0;c2<2;c2++){
-        const idx=r2*2+c2;const prog=easeOutElastic(Math.min(1,Math.max(0,p*2.5-idx*0.3)))
+        const idx=r2*2+c2
+        const prog=easeOutCubic(Math.min(1,Math.max(0,(p-0.22)*3.5-idx*0.35)))
         const x=ox+c2*(cellSz+10),y=oy+r2*(cellSz+10)
         ctx.save();ctx.globalAlpha=prog*0.3;ctx.fillStyle=colors[idx];ctx.fillRect(x,y,cellSz,cellSz);ctx.restore()
-        ctx.save();ctx.globalAlpha=prog*0.8;ctx.strokeStyle=colors[idx];ctx.lineWidth=2;ctx.strokeRect(x,y,cellSz,cellSz);ctx.restore()
+        ctx.save();ctx.globalAlpha=prog*0.85;ctx.strokeStyle=colors[idx];ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor=colors[idx];ctx.strokeRect(x,y,cellSz,cellSz);ctx.restore()
         gText(`(${signs[idx][0]})(${signs[idx][1]})=${results[idx]}`,x+cellSz/2,y+cellSz/2,colors[idx],13,prog)
+        if(prog>0.4) gCircle(x+cellSz/2,y+cellSz/2,cellSz*0.45,colors[idx],false,prog*0.2)
       }
-      if(p>0.8) gText('\uAC19\uC740 \uBD80\uD638=\uC591\uC218, \uB2E4\uB978 \uBD80\uD638=\uC74C\uC218',cx,H-16,GRN,13,easeOutCubic((p-0.8)/0.2))
+
+      // ④ 슬라이더 값으로 예시 계산
+      if(p>0.6){const p4=easeOutCubic((p-0.6)/0.25)
+        const signA=a>=0?'+':'-',signB=b>=0?'+':'-'
+        const prod=a*b,signProd=prod>=0?'+':'-'
+        gLine(cx-70,cy+cellSz+14,cx+70,cy+cellSz+14,PURPLE,1,p4*0.4)
+        gText(`④ (${signA}${Math.abs(a)}) × (${signB}${Math.abs(b)})`,cx,cy+cellSz+28,PURPLE,13,p4)
+        gText(`= (${signProd}${Math.abs(prod)})`,cx,cy+cellSz+44,PURPLE,14,p4)}
+
+      // ⑤ 결론 + 강조
+      if(p>0.82){const p5=easeOutCubic((p-0.82)/0.18)
+        gLine(30,H-28,W-30,H-28,'rgba(0,255,204,0.15)',1,p5)
+        gCircle(cx,H-14,W*0.45,MINT,false,p5*0.06)
+        gText('⑤ 같은 부호=양수, 다른 부호=음수',cx,H-14,MINT,13,p5)}
       break
     }
 
@@ -1677,36 +2407,57 @@ switch (type) {
     // ══════════════════════════════════════════
 
     case 'prime_factorization': {
-      // 소인수분해 나무 (예: 12 = 2² × 3)
-      const n = v('n', 12)
-      const nodes = [{v:n,x:cx,y:40,leaf:false}]
-      let cur = n, yy = 40
-      const factors: number[] = []
-      let temp = cur
-      for (const pr of [2,3,5,7,11,13]) { while (temp % pr === 0) { factors.push(pr); temp /= pr } }
-      if (temp > 1) factors.push(temp)
+      // M010: 소인수분해 — A급 5단계
+      const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
+      const n=v('n',12)
+      const factors: number[]=[]
+      let temp=n
+      for(const pr of [2,3,5,7,11,13]){while(temp%pr===0){factors.push(pr);temp=Math.round(temp/pr)}}
+      if(temp>1) factors.push(temp)
+      const nodeR=18,yGap=46
 
-      const nodeR = 18, yGap = 48
-      factors.forEach((f, i) => {
-        const prog = easeOutElastic(Math.min(1, Math.max(0, p * 1.8 - i * 0.15)))
-        const ny = 55 + i * yGap
-        const lx = cx - 40 - i * 8, rx = cx + 40 + i * 8
-        // 소수 노드
-        gCircle(lx, ny, nodeR * prog, MINT, true, prog * 0.8)
-        gText(String(f), lx, ny, '#000', 13, prog)
-        // 나머지 노드
-        cur = Math.round(cur / f)
-        if (cur > 1) {
-          gCircle(rx, ny, nodeR * prog, PURPLE, true, prog * 0.7)
-          gText(String(cur), rx, ny, '#000', 13, prog)
-        }
-        // 연결선
-        if (i === 0) gLine(cx, 55, lx, ny - nodeR, 'rgba(255,255,255,0.2)', 1.5, prog)
-        if (i > 0) { gLine(cx + 40 + (i-1)*8, 55+(i-1)*yGap+nodeR, lx, ny-nodeR, 'rgba(255,255,255,0.15)', 1, prog); gLine(cx+40+(i-1)*8, 55+(i-1)*yGap+nodeR, rx, ny-nodeR, 'rgba(255,255,255,0.15)', 1, prog) }
-      })
-      gCircle(cx, 38, nodeR, AMBER, true, p)
-      gText(String(n), cx, 38, '#000', 14, p)
-      if (p > 0.8) gText(`${n} = ${factors.join(' \u00D7 ')}`, cx, H - 20, MINT, 14, easeOutCubic((p-0.8)/0.2))
+      // ① 타이틀 + 수 노드
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.18)
+        gText(`① ${n} 소인수분해 시작`,cx,18,WHITE,14,p1)
+        gLine(cx-60,28,cx+60,28,ORG,1.5,p1*0.5)
+        gCircle(cx,46,nodeR,AMBER,true,p1*0.9)
+        gText(String(n),cx,46,'#000',14,p1)}
+
+      // ② 나눗셈 축선
+      if(p>0.12){const p2=easeOutCubic((p-0.12)/0.2)
+        gLine(cx,46+nodeR,cx,46+nodeR+factors.length*yGap,VIO,1.5,p2*0.4)
+        gText('② 나무 구조',cx-70,46+nodeR+factors.length*yGap/2,VIO,11,p2)}
+
+      // ③ 소수 노드 순차 등장
+      let cur2=n
+      factors.forEach((f,i)=>{
+        const prog=easeOutCubic(Math.min(1,Math.max(0,(p-0.28)*3-i*0.45)))
+        const ny=60+i*yGap
+        const lx=cx-45-i*7,rx=cx+45+i*7
+        if(i===0) gLine(cx,46+nodeR,lx,ny-nodeR,'rgba(255,255,255,0.2)',1.5,prog)
+        else{gLine(cx+45+(i-1)*7,60+(i-1)*yGap+nodeR,lx,ny-nodeR,'rgba(255,255,255,0.15)',1,prog)
+          gLine(cx+45+(i-1)*7,60+(i-1)*yGap+nodeR,rx,ny-nodeR,'rgba(255,255,255,0.15)',1,prog)}
+        gCircle(lx,ny,nodeR*prog,MINT,true,prog*0.85)
+        gText(String(f),lx,ny,'#000',13,prog)
+        cur2=Math.round(cur2/f)
+        if(cur2>1){gCircle(rx,ny,nodeR*prog,PURPLE,true,prog*0.7);gText(String(cur2),rx,ny,'#000',13,prog)}
+        if(prog>0.5) gLine(lx+nodeR,ny,lx+nodeR+18,ny,ORG,1,prog*0.5)})
+
+      // ④ 소수 구분 박스
+      if(p>0.65){const p4=easeOutCubic((p-0.65)/0.2)
+        const unique=[...new Set(factors)]
+        unique.forEach((f,i)=>{const bx=30+i*55
+          gLine(bx,H-52,bx+46,H-52,MINT,1.5,p4*0.6);gLine(bx,H-52,bx,H-32,MINT,1,p4*0.4)
+          gLine(bx+46,H-52,bx+46,H-32,MINT,1,p4*0.4);gLine(bx,H-32,bx+46,H-32,MINT,1.5,p4*0.6)
+          gCircle(bx+23,H-42,12,MINT,false,p4*0.5)
+          gText(String(f),bx+23,H-42,MINT,13,p4)})
+        gText('④ 소인수 목록',30+unique.length*27.5,H-42,'rgba(255,255,255,0.4)',10,p4)}
+
+      // ⑤ 결과식
+      if(p>0.82){const p5=easeOutCubic((p-0.82)/0.18)
+        gLine(30,H-22,W-30,H-22,'rgba(0,255,204,0.15)',1,p5)
+        gCircle(cx,H-14,W*0.42,MINT,false,p5*0.06)
+        gText(`⑤ ${n} = ${factors.join(' × ')}`,cx,H-14,MINT,14,p5)}
       break
     }
 
@@ -1727,17 +2478,48 @@ switch (type) {
     }
 
     case 'absolute_value': {
-      const val = v('a', -5)
-      const lineY3 = cy, sc2 = (W-80)/14, ox3 = cx-7*sc2
-      gLine(30, lineY3, W-30, lineY3, 'rgba(255,255,255,0.2)', 2, p)
-      for (let i=-7;i<=7;i++) { const x=ox3+(i+7)*sc2; gLine(x,lineY3-5,x,lineY3+5,'rgba(255,255,255,0.25)',1,p); if(i%2===0) gText(String(i),x,lineY3+16,'rgba(255,255,255,0.35)',9,p) }
-      if (p > 0.3) {
-        const ap=easeOutCubic((p-0.3)/0.4), vx=ox3+(val+7)*sc2, zx=ox3+7*sc2
-        gCircle(vx, lineY3, 6, PURPLE, true, ap)
-        gText(String(val), vx, lineY3-22, PURPLE, 13, ap)
-        gLine(Math.min(vx,zx), lineY3-3, Math.max(vx,zx), lineY3-3, AMBER, 3, ap)
-        gText(`|${val}| = ${Math.abs(val)}`, cx, lineY3+38, MINT, 16, ap)
-      }
+      // M004: 절댓값 — A급 5단계
+      const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
+      const val=v('a',-5)
+      const lineY3=cy,sc2=(W-80)/14,ox3=cx-7*sc2
+
+      // ① 수직선 등장
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.2)
+        gLine(30,lineY3,W-30,lineY3,'rgba(255,255,255,0.2)',2,p1)
+        gLine(W-30,lineY3,W-22,lineY3-5,'rgba(255,255,255,0.2)',1.5,p1)
+        gLine(W-30,lineY3,W-22,lineY3+5,'rgba(255,255,255,0.2)',1.5,p1)
+        for(let i=-7;i<=7;i++){const x=ox3+(i+7)*sc2
+          gLine(x,lineY3-5,x,lineY3+5,'rgba(255,255,255,0.25)',i===0?2:1,p1)
+          if(i%2===0) gText(String(i),x,lineY3+16,'rgba(255,255,255,0.35)',9,p1)}
+        gCircle(ox3+7*sc2,lineY3,4,'rgba(255,255,255,0.5)',true,p1)
+        gText('① 수직선 위의 점',cx,lineY3-38,WHITE,13,p1)}
+
+      // ② 값 점 등장
+      if(p>0.22){const p2=easeOutCubic((p-0.22)/0.22)
+        const vx=ox3+(val+7)*sc2
+        gCircle(vx,lineY3,7,VIO,true,p2)
+        gText(String(val),vx,lineY3-22,VIO,14,p2)
+        gLine(vx,lineY3-8,vx,lineY3+8,VIO,2.5,p2)
+        gText('② 음수 점 표시',cx,lineY3-52,VIO,12,p2)}
+
+      // ③ 원점까지 거리 선
+      if(p>0.42){const p3=easeOutCubic((p-0.42)/0.22)
+        const vx=ox3+(val+7)*sc2,zx=ox3+7*sc2
+        const lx=Math.min(vx,zx),rx=Math.max(vx,zx)
+        gLine(lx,lineY3-3,rx,lineY3-3,ORG,3,p3)
+        gCircle(lx,lineY3,5,ORG,false,p3*0.7)
+        gCircle(rx,lineY3,5,ORG,false,p3*0.7)
+        gText(`③ 거리 = ${Math.abs(val)}`,(lx+rx)/2,lineY3-18,ORG,13,p3)}
+
+      // ④ 절댓값 정의
+      if(p>0.62){const p4=easeOutCubic((p-0.62)/0.2)
+        gLine(cx-100,lineY3+36,cx+100,lineY3+36,'rgba(0,255,204,0.2)',1,p4)
+        gText(`④ |${val}| = ${Math.abs(val)} (원점까지 거리)`,cx,lineY3+50,MINT,13,p4)}
+
+      // ⑤ 결론 강조
+      if(p>0.82){const p5=easeOutCubic((p-0.82)/0.18)
+        gCircle(cx,lineY3+75,60,GRN,false,p5*0.3)
+        gText(`⑤ |${val}| = ${Math.abs(val)}  (절댓값은 항상 ≥ 0)`,cx,lineY3+75,GRN,14,p5)}
       break
     }
 
@@ -1746,19 +2528,48 @@ switch (type) {
     // ══════════════════════════════════════════
 
     case 'square_root_viz': {
-      // M011: 제곱근 — 넓이→한 변
-      const VIO='#534AB7',GRN='#1D9E75'
-      const area=v('a',9),side=Math.sqrt(area)
-      const sz=Math.min(100,Math.min(W-60,H-60)/1.5)
-      const gridN=Math.round(side),cellSz=sz/gridN,ox=cx-sz/2,oy=cy-sz/2-5
-      // 격자
-      for(let r2=0;r2<gridN;r2++)for(let c2=0;c2<gridN;c2++){
-        const prog=easeOutElastic(Math.min(1,Math.max(0,p*2-(r2*gridN+c2)/(gridN*gridN)*0.5)))
-        ctx.save();ctx.globalAlpha=prog*0.5;ctx.fillStyle=VIO+'55';ctx.strokeStyle=VIO;ctx.lineWidth=1.5
-        ctx.fillRect(ox+c2*cellSz+1,oy+r2*cellSz+1,cellSz-2,cellSz-2);ctx.strokeRect(ox+c2*cellSz+1,oy+r2*cellSz+1,cellSz-2,cellSz-2);ctx.restore()}
-      gText(`\uB113\uC774 = ${area}`,cx,oy+sz/2,'rgba(255,255,255,0.5)',13,p)
-      if(p>0.5){const fp=easeOutCubic((p-0.5)/0.4)
-        gLine(ox,oy+sz+6,ox+sz,oy+sz+6,GRN,2.5,fp);gText(`\uD55C \uBCC0 = ${r(side)} = \u221A${area}`,cx,oy+sz+22,GRN,16,fp)}
+      // M011: 제곱근 넓이→한 변 — A급 5단계
+      const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
+      const area=v('a',9),side=Math.sqrt(Math.max(1,area))
+      const sz=Math.min(100,Math.min(W-80,H-80)/1.4)
+      const gridN=Math.max(1,Math.round(side)),cellSz=sz/gridN,ox=cx-sz/2,oy=cy-sz/2-10
+
+      // ① 제목 + 넓이 라벨
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.18)
+        gText(`① 넓이 ${area}인 정사각형`,cx,18,WHITE,14,p1)
+        gLine(cx-90,28,cx+90,28,ORG,1.5,p1*0.5)}
+
+      // ② 테두리 박스 등장
+      if(p>0.1){const p2=easeOutCubic((p-0.1)/0.2)
+        gLine(ox,oy,ox+sz,oy,VIO,2,p2);gLine(ox+sz,oy,ox+sz,oy+sz,VIO,2,p2)
+        gLine(ox+sz,oy+sz,ox,oy+sz,VIO,2,p2);gLine(ox,oy+sz,ox,oy,VIO,2,p2)
+        ctx.save();ctx.globalAlpha=p2*0.08;ctx.fillStyle=VIO;ctx.fillRect(ox,oy,sz,sz);ctx.restore()
+        gText(`② 넓이 = ${area}`,cx,oy+sz/2,'rgba(255,255,255,0.5)',14,p2)}
+
+      // ③ 격자 칸 채우기
+      if(p>0.28){
+        for(let r2=0;r2<gridN;r2++)for(let c2=0;c2<gridN;c2++){
+          const prog=easeOutCubic(Math.min(1,Math.max(0,(p-0.28)*3.5-(r2*gridN+c2)/(gridN*gridN)*0.8)))
+          ctx.save();ctx.globalAlpha=prog*0.45;ctx.fillStyle=VIO+'55';ctx.strokeStyle=VIO;ctx.lineWidth=1.5
+          ctx.fillRect(ox+c2*cellSz+1,oy+r2*cellSz+1,cellSz-2,cellSz-2)
+          ctx.strokeRect(ox+c2*cellSz+1,oy+r2*cellSz+1,cellSz-2,cellSz-2);ctx.restore()
+          if(prog>0.6&&gridN<=4) gText(String(r2*gridN+c2+1),ox+c2*cellSz+cellSz/2,oy+r2*cellSz+cellSz/2,'rgba(255,255,255,0.4)',Math.min(11,cellSz-4),prog)}
+        if(p>0.45){const p3=easeOutCubic((p-0.45)/0.15)
+          gText(`③ ${gridN}×${gridN} = ${area}칸`,cx,oy+sz+16,ORG,13,p3)}}
+
+      // ④ 한 변 강조선
+      if(p>0.6){const p4=easeOutCubic((p-0.6)/0.22)
+        gLine(ox-6,oy,ox-6,oy+sz,GRN,3,p4)
+        gLine(ox-12,oy,ox,oy,GRN,2,p4);gLine(ox-12,oy+sz,ox,oy+sz,GRN,2,p4)
+        gLine(ox,oy+sz+28,ox+sz,oy+sz+28,GRN,2.5,p4)
+        gCircle(ox,oy,5,GRN,true,p4*0.8);gCircle(ox+sz,oy+sz,5,GRN,true,p4*0.8)
+        gText(`④ 한 변 = √${area} = ${r(side)}`,cx,oy+sz+42,GRN,14,p4)}
+
+      // ⑤ 결론
+      if(p>0.82){const p5=easeOutCubic((p-0.82)/0.18)
+        gCircle(cx,H-14,W*0.42,MINT,false,p5*0.06)
+        gLine(30,H-26,W-30,H-26,'rgba(0,255,204,0.15)',1,p5)
+        gText(`⑤ √${area} = ${r(side)} (제곱하면 ${area})`,cx,H-14,MINT,15,p5)}
       break
     }
 
@@ -1800,18 +2611,41 @@ switch (type) {
     }
 
     case 'rationalize': {
-      // M014: 분모의 유리화
+      // M014: 분모의 유리화 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const steps: {text:string,color:string,note?:string}[] = [
-        {text:'1/\u221A2',color:WHITE},
-        {text:'\u00D7 \u221A2/\u221A2',color:VIO,note:'\uBD84\uC790\uBD84\uBAA8\uC5D0 \u221A2 \uACF1\uD558\uAE30'},
-        {text:'= \u221A2 / (\u221A2\u00D7\u221A2)',color:GRN},
-        {text:'= \u221A2 / 2',color:ORG},
-      ]
-      steps.forEach((s,i)=>{const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.5-i*0.4)));const y=cy-55+i*34
-        gText(s.text,cx,y,s.color,i===0?22:17,prog)
-        if(s.note&&prog>0.3) gText(s.note,cx,y+16,'rgba(255,255,255,0.3)',11,prog*0.7)})
-      if(p>0.9) gText('\uBD84\uBAA8\uC5D0 \uB8E8\uD2B8 \uC5C6\uC560\uAE30!',cx,H-16,GRN,14,easeOutCubic((p-0.9)/0.1))
+      const n2=v('n',1),d2=v('d',2)
+      const dSqrt=Math.sqrt(Math.max(1,d2))
+
+      // ① 문제 제시
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.18)
+        gText(`① 분모에 √가 있다: ${n2}/√${d2}`,cx,22,WHITE,14,p1)
+        gLine(cx-120,32,cx+120,32,'rgba(255,255,255,0.2)',1,p1*0.5)
+        gCircle(cx+30,22,22,ORG,false,p1*0.25)}
+
+      // ② 분자분모에 √d 곱하기
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.22)
+        gText(`② × √${d2}/√${d2}`,cx,cy-50,VIO,17,p2)
+        gLine(cx-60,cy-38,cx+60,cy-38,VIO,1.5,p2*0.5)
+        gLine(cx-70,cy-28,cx+70,cy-28,'rgba(255,255,255,0.15)',1,p2*0.4)
+        gText('← 분자분모에 같은 수 곱하기',cx,cy-20,'rgba(255,255,255,0.35)',11,p2*0.8)}
+
+      // ③ 분자 계산
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.22)
+        gText(`③ 분자: ${n2}×√${d2} = ${n2}√${d2}`,cx,cy,GRN,15,p3)
+        gLine(cx-100,cy+12,cx+100,cy+12,GRN,1,p3*0.4)}
+
+      // ④ 분모 계산
+      if(p>0.58){const p4=easeOutCubic((p-0.58)/0.2)
+        gText(`④ 분모: √${d2}×√${d2} = ${d2}`,cx,cy+34,ORG,15,p4)
+        gLine(cx-90,cy+48,cx+90,cy+48,ORG,1,p4*0.4)
+        gCircle(cx,cy+34,50,ORG,false,p4*0.18)
+        gText(`(루트 사라짐!)`,cx,cy+58,'rgba(255,165,0,0.5)',11,p4)}
+
+      // ⑤ 결론
+      if(p>0.78){const p5=easeOutCubic((p-0.78)/0.22)
+        gLine(30,H-28,W-30,H-28,'rgba(0,255,204,0.15)',1,p5)
+        gCircle(cx,H-14,W*0.44,MINT,false,p5*0.06)
+        gText(`⑤ = ${n2}√${d2}/${d2} (분모 유리화 완료!)`,cx,H-14,MINT,14,p5)}
       break
     }
 
@@ -1835,14 +2669,46 @@ switch (type) {
     }
 
     case 'linear_expr': {
-      // M016: 동류항 정리
+      // M016: 동류항 정리 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      gText('3x + 2 + 5x - 1',cx,34,'rgba(255,255,255,0.6)',18,easeOutCubic(Math.min(1,p*3)))
-      if(p>0.2){const p2=easeOutCubic((p-0.2)/0.3)
-        gText('x\uD56D \uBAA8\uC73C\uAE30: 3x+5x = 8x',cx,cy-15,VIO,14,p2)}
-      if(p>0.45){const p3=easeOutCubic((p-0.45)/0.3)
-        gText('\uC0C1\uC218\uD56D \uBAA8\uC73C\uAE30: 2+(-1) = 1',cx,cy+15,GRN,14,p3)}
-      if(p>0.75) gText('= 8x + 1',cx,cy+50,ORG,22,easeOutCubic((p-0.75)/0.25))
+      const cA=v('a',3),cB=v('b',5),kC=v('c',2),kD=v('d',-1)
+      const sumX=cA+cB,sumK=kC+kD
+
+      // ① 원래 식
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.2)
+        gText(`① ${cA}x + ${kC} + ${cB}x + (${kD})`,cx,22,WHITE,15,p1)
+        gLine(cx-150,32,cx+150,32,'rgba(255,255,255,0.15)',1,p1*0.5)}
+
+      // ② x항 묶기 블록
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.22)
+        const bw=26,bh=26,startX=cx-((cA+cB)/2)*(bw+4)
+        for(let i=0;i<cA+cB;i++){const bx=startX+i*(bw+4)
+          ctx.save();ctx.globalAlpha=p2*0.5;ctx.fillStyle=(i<cA?VIO:VIO+'99')+'66';ctx.strokeStyle=i<cA?VIO:VIO+'cc';ctx.lineWidth=i<cA?2:1.5
+          ctx.fillRect(bx,cy-52,bw,bh);ctx.strokeRect(bx,cy-52,bw,bh);ctx.restore()
+          gText('x',bx+bw/2,cy-52+bh/2,i<cA?VIO:PURPLE,9,p2)}
+        gLine(cx-((cA+cB)/2)*(bw+4)-6,cy-30,cx+((cA+cB)/2)*(bw+4)+6,cy-30,VIO,1.5,p2*0.5)
+        gText(`② x항: ${cA}x+${cB}x = ${sumX}x`,cx,cy-18,VIO,14,p2)}
+
+      // ③ 상수항 묶기
+      if(p>0.4){const p3=easeOutCubic((p-0.4)/0.22)
+        gLine(cx-60,cy+12,cx+60,cy+12,'rgba(255,255,255,0.12)',1,p3)
+        gCircle(cx-40,cy+24,14,GRN,false,p3*0.5)
+        gCircle(cx+40,cy+24,14,ORG,false,p3*0.5)
+        gText(String(kC),cx-40,cy+24,GRN,13,p3)
+        gText(String(kD),cx+40,cy+24,ORG,13,p3)
+        gText(`③ 상수: ${kC}+(${kD}) = ${sumK}`,cx,cy+42,GRN,14,p3)}
+
+      // ④ 결합 화살표
+      if(p>0.6){const p4=easeOutCubic((p-0.6)/0.2)
+        gLine(cx-30,cy+55,cx-12,cy+70,WHITE,1.5,p4*0.5)
+        gLine(cx+30,cy+55,cx+12,cy+70,WHITE,1.5,p4*0.5)
+        gText('④ 합치기',cx,cy+64,'rgba(255,255,255,0.4)',11,p4)}
+
+      // ⑤ 결론
+      if(p>0.76){const p5=easeOutCubic((p-0.76)/0.24)
+        gCircle(cx,cy+88,44,MINT,false,p5*0.2)
+        gLine(cx-60,cy+78,cx+60,cy+78,MINT,1.5,p5*0.4)
+        gText(`⑤ = ${sumX}x + ${sumK}`,cx,cy+88,MINT,20,p5)}
       break
     }
 
@@ -1868,23 +2734,49 @@ switch (type) {
     }
 
     case 'binomial_sq_plus': {
-      // M018: (a+b)² 넓이 모델
+      // M018: (a+b)² 넓이 모델 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
       const a5=v('a',3),b5=v('b',2),tot=a5+b5
-      const sc=Math.min(26,(Math.min(W,H)-50)/tot),ox=cx-tot*sc/2,oy=cy-tot*sc/2-5
-      const p1=easeOutCubic(Math.min(1,p*2.5))
-      ctx.save();ctx.globalAlpha=p1*0.25;ctx.fillStyle=VIO;ctx.fillRect(ox,oy,a5*sc,a5*sc);ctx.restore()
-      ctx.save();ctx.globalAlpha=p1;ctx.strokeStyle=VIO;ctx.lineWidth=2;ctx.strokeRect(ox,oy,a5*sc,a5*sc);ctx.restore()
-      if(p1>0.3) gText('a\u00B2',ox+a5*sc/2,oy+a5*sc/2,VIO,14,p1)
-      const p2=easeOutCubic(Math.max(0,Math.min(1,(p-0.25)*2.5)))
-      ctx.save();ctx.globalAlpha=p2*0.2;ctx.fillStyle=ORG;ctx.fillRect(ox+a5*sc,oy,b5*sc,a5*sc);ctx.fillRect(ox,oy+a5*sc,a5*sc,b5*sc);ctx.restore()
-      if(p2>0.3){gText('ab',ox+a5*sc+b5*sc/2,oy+a5*sc/2,ORG,12,p2);gText('ab',ox+a5*sc/2,oy+a5*sc+b5*sc/2,ORG,12,p2)}
-      const p3=easeOutCubic(Math.max(0,Math.min(1,(p-0.5)*2.5)))
-      ctx.save();ctx.globalAlpha=p3*0.25;ctx.fillStyle=GRN;ctx.fillRect(ox+a5*sc,oy+a5*sc,b5*sc,b5*sc);ctx.restore()
-      ctx.save();ctx.globalAlpha=p3;ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.strokeRect(ox+a5*sc,oy+a5*sc,b5*sc,b5*sc);ctx.restore()
-      if(p3>0.3) gText('b\u00B2',ox+a5*sc+b5*sc/2,oy+a5*sc+b5*sc/2,GRN,14,p3)
-      if(p>0.75){const fp=easeOutCubic((p-0.75)/0.25);ctx.save();ctx.globalAlpha=fp;ctx.strokeStyle=WHITE;ctx.lineWidth=2.5;ctx.strokeRect(ox,oy,tot*sc,tot*sc);ctx.restore()
-        gText('(a+b)\u00B2 = a\u00B2+2ab+b\u00B2',cx,H-16,GRN,14,fp)}
+      const sc=Math.min(24,(Math.min(W,H)-60)/tot),ox=cx-tot*sc/2,oy=cy-tot*sc/2-8
+
+      // ① 전체 정사각형 테두리
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.2)
+        gText(`① (a+b)² = (${a5}+${b5})² = ${tot}²`,cx,16,WHITE,14,p1)
+        gLine(ox,oy,ox+tot*sc,oy,WHITE,2,p1*0.4);gLine(ox+tot*sc,oy,ox+tot*sc,oy+tot*sc,WHITE,2,p1*0.4)
+        gLine(ox+tot*sc,oy+tot*sc,ox,oy+tot*sc,WHITE,2,p1*0.4);gLine(ox,oy+tot*sc,ox,oy,WHITE,2,p1*0.4)
+        gLine(ox+a5*sc,oy,ox+a5*sc,oy+tot*sc,'rgba(255,255,255,0.2)',1,p1*0.6)
+        gLine(ox,oy+a5*sc,ox+tot*sc,oy+a5*sc,'rgba(255,255,255,0.2)',1,p1*0.6)}
+
+      // ② a² 등장
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.22)
+        ctx.save();ctx.globalAlpha=p2*0.3;ctx.fillStyle=VIO;ctx.fillRect(ox,oy,a5*sc,a5*sc);ctx.restore()
+        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=VIO;ctx.strokeRect(ox,oy,a5*sc,a5*sc);ctx.restore()
+        gText('② a²',ox+a5*sc/2,oy+a5*sc/2,VIO,14,p2)
+        gCircle(ox,oy,4,VIO,true,p2*0.7);gCircle(ox+a5*sc,oy+a5*sc,4,VIO,true,p2*0.7)}
+
+      // ③ 두 ab 등장
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.22)
+        ctx.save();ctx.globalAlpha=p3*0.25;ctx.fillStyle=ORG
+        ctx.fillRect(ox+a5*sc,oy,b5*sc,a5*sc);ctx.fillRect(ox,oy+a5*sc,a5*sc,b5*sc);ctx.restore()
+        ctx.save();ctx.globalAlpha=p3;ctx.strokeStyle=ORG;ctx.lineWidth=2;ctx.shadowBlur=6;ctx.shadowColor=ORG
+        ctx.strokeRect(ox+a5*sc,oy,b5*sc,a5*sc);ctx.strokeRect(ox,oy+a5*sc,a5*sc,b5*sc);ctx.restore()
+        gText('③ab',ox+a5*sc+b5*sc/2,oy+a5*sc/2,ORG,12,p3)
+        gText('③ab',ox+a5*sc/2,oy+a5*sc+b5*sc/2,ORG,12,p3)
+        gLine(ox+a5*sc+b5*sc/2,oy+a5*sc/2+10,ox+a5*sc/2,oy+a5*sc+b5*sc/2-10,ORG,1,p3*0.4)}
+
+      // ④ b² 등장
+      if(p>0.57){const p4=easeOutCubic((p-0.57)/0.22)
+        ctx.save();ctx.globalAlpha=p4*0.3;ctx.fillStyle=GRN;ctx.fillRect(ox+a5*sc,oy+a5*sc,b5*sc,b5*sc);ctx.restore()
+        ctx.save();ctx.globalAlpha=p4;ctx.strokeStyle=GRN;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=GRN;ctx.strokeRect(ox+a5*sc,oy+a5*sc,b5*sc,b5*sc);ctx.restore()
+        gText('④ b²',ox+a5*sc+b5*sc/2,oy+a5*sc+b5*sc/2,GRN,14,p4)
+        gCircle(ox+a5*sc,oy+a5*sc,4,GRN,true,p4*0.7)}
+
+      // ⑤ 전체 강조 + 결론
+      if(p>0.76){const p5=easeOutCubic((p-0.76)/0.24)
+        ctx.save();ctx.globalAlpha=p5*0.15;ctx.fillStyle=WHITE;ctx.fillRect(ox,oy,tot*sc,tot*sc);ctx.restore()
+        ctx.save();ctx.globalAlpha=p5;ctx.strokeStyle=WHITE;ctx.lineWidth=2.5;ctx.strokeRect(ox,oy,tot*sc,tot*sc);ctx.restore()
+        gCircle(cx,H-14,W*0.44,MINT,false,p5*0.06)
+        gText('⑤ (a+b)² = a²+2ab+b²',cx,H-14,MINT,14,p5)}
       break
     }
 
@@ -1924,17 +2816,52 @@ switch (type) {
     }
 
     case 'binomial_product': {
-      // M021: (x+a)(x+b) 넓이 4칸
+      // M021: (x+a)(x+b) 넓이 4칸 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const sz=Math.min(80,W*0.2),ox=cx-sz,oy=cy-sz/2-5
-      const labels=[['x\u00B2','ax'],['bx','ab']],colors=[[VIO,ORG],[GRN,ORG]]
-      for(let r2=0;r2<2;r2++)for(let c2=0;c2<2;c2++){
-        const idx=r2*2+c2;const prog=easeOutElastic(Math.min(1,Math.max(0,p*2.5-idx*0.2)))
-        const x=ox+c2*sz,y=oy+r2*(sz*0.6)
-        ctx.save();ctx.globalAlpha=prog*0.25;ctx.fillStyle=colors[r2][c2];ctx.fillRect(x,y,sz,sz*0.6);ctx.restore()
-        ctx.save();ctx.globalAlpha=prog*0.8;ctx.strokeStyle=colors[r2][c2];ctx.lineWidth=2;ctx.strokeRect(x,y,sz,sz*0.6);ctx.restore()
-        gText(labels[r2][c2],x+sz/2,y+sz*0.3,colors[r2][c2],13,prog)}
-      if(p>0.75) gText('(x+a)(x+b) = x\u00B2+(a+b)x+ab',cx,H-16,GRN,13,easeOutCubic((p-0.75)/0.25))
+      const aV=v('a',2),bV=v('b',3)
+      const sz=Math.min(78,W*0.19),ox=cx-sz,oy=cy-sz*0.6-5
+      const labels=[['x²',`${aV}x`],[`${bV}x`,`${aV*bV}`]]
+      const colors=[[VIO,ORG],[GRN,ORG]]
+
+      // ① 식 제목
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.2)
+        gText(`① (x+${aV})(x+${bV}) 넓이 모델`,cx,18,WHITE,14,p1)
+        gLine(cx-140,28,cx+140,28,'rgba(255,255,255,0.18)',1,p1*0.5)
+        gText('x',ox+sz/2,oy-14,'rgba(255,255,255,0.4)',12,p1)
+        gText(String(aV),ox+sz+sz/2,oy-14,'rgba(255,165,0,0.5)',12,p1)
+        gText('x',ox-16,oy+sz*0.3,'rgba(255,255,255,0.4)',12,p1)
+        gText(String(bV),ox-16,oy+sz*0.6+sz*0.3,'rgba(0,255,180,0.5)',12,p1)}
+
+      // ② x² 칸
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.22)
+        ctx.save();ctx.globalAlpha=p2*0.3;ctx.fillStyle=VIO;ctx.fillRect(ox,oy,sz,sz*0.6);ctx.restore()
+        ctx.save();ctx.globalAlpha=p2*0.9;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=VIO;ctx.strokeRect(ox,oy,sz,sz*0.6);ctx.restore()
+        gText('② x²',ox+sz/2,oy+sz*0.3,VIO,14,p2)
+        gCircle(ox,oy,4,VIO,true,p2*0.7);gCircle(ox+sz,oy+sz*0.6,4,VIO,true,p2*0.7)}
+
+      // ③ ax, bx 칸
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.22)
+        ctx.save();ctx.globalAlpha=p3*0.2;ctx.fillStyle=ORG;ctx.fillRect(ox+sz,oy,sz,sz*0.6);ctx.restore()
+        ctx.save();ctx.globalAlpha=p3*0.85;ctx.strokeStyle=ORG;ctx.lineWidth=2;ctx.shadowBlur=6;ctx.shadowColor=ORG;ctx.strokeRect(ox+sz,oy,sz,sz*0.6);ctx.restore()
+        gText(`③ ${aV}x`,ox+sz+sz/2,oy+sz*0.3,ORG,13,p3)
+        ctx.save();ctx.globalAlpha=p3*0.2;ctx.fillStyle=GRN;ctx.fillRect(ox,oy+sz*0.6,sz,sz*0.6);ctx.restore()
+        ctx.save();ctx.globalAlpha=p3*0.85;ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.shadowBlur=6;ctx.shadowColor=GRN;ctx.strokeRect(ox,oy+sz*0.6,sz,sz*0.6);ctx.restore()
+        gText(`③ ${bV}x`,ox+sz/2,oy+sz*0.6+sz*0.3,GRN,13,p3)
+        gLine(ox+sz+sz/2,oy+sz*0.3+10,ox+sz/2,oy+sz*0.6+sz*0.3-10,'rgba(255,165,0,0.3)',1,p3*0.5)}
+
+      // ④ ab 칸
+      if(p>0.57){const p4=easeOutCubic((p-0.57)/0.22)
+        ctx.save();ctx.globalAlpha=p4*0.25;ctx.fillStyle=ORG;ctx.fillRect(ox+sz,oy+sz*0.6,sz,sz*0.6);ctx.restore()
+        ctx.save();ctx.globalAlpha=p4*0.85;ctx.strokeStyle=ORG;ctx.lineWidth=2;ctx.shadowBlur=6;ctx.shadowColor=ORG;ctx.strokeRect(ox+sz,oy+sz*0.6,sz,sz*0.6);ctx.restore()
+        gText(`④ ${aV*bV}`,ox+sz+sz/2,oy+sz*0.6+sz*0.3,ORG,14,p4)
+        gCircle(ox+sz,oy+sz*0.6,5,ORG,true,p4*0.8)}
+
+      // ⑤ 합산 결론
+      if(p>0.76){const p5=easeOutCubic((p-0.76)/0.24)
+        const sumX=aV+bV,prod=aV*bV
+        gCircle(cx,H-14,W*0.46,MINT,false,p5*0.06)
+        gLine(30,H-26,W-30,H-26,'rgba(0,255,204,0.15)',1,p5)
+        gText(`⑤ x²+(${aV}+${bV})x+${aV*bV} = x²+${sumX}x+${prod}`,cx,H-14,MINT,13,p5)}
       break
     }
 
@@ -1955,32 +2882,97 @@ switch (type) {
     }
 
     case 'factorization_perfect': {
-      // M023: 완전제곱식 → (a+b)²
-      const VIO='#534AB7',GRN='#1D9E75'
-      gText('a\u00B2 + 2ab + b\u00B2',cx,34,'rgba(255,255,255,0.6)',18,easeOutCubic(Math.min(1,p*3)))
-      // 4칸 → 정사각형
-      const sz=Math.min(70,W*0.18)
-      if(p>0.2){const p2=easeOutCubic((p-0.2)/0.35);const ox=cx-sz,oy=cy-sz/2
-        ctx.save();ctx.globalAlpha=p2*0.25;ctx.fillStyle=VIO;ctx.fillRect(ox,oy,sz,sz);ctx.restore()
-        ctx.save();ctx.globalAlpha=p2*0.15;ctx.fillStyle=GRN;ctx.fillRect(ox+sz,oy,sz,sz);ctx.restore()
-        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=VIO;ctx.lineWidth=2;ctx.strokeRect(ox,oy,sz*2,sz);ctx.restore()
-        gText('4\uCE78 \u2192 \uC815\uC0AC\uAC01\uD615',cx,oy+sz+16,'rgba(255,255,255,0.4)',12,p2)}
-      if(p>0.7) gText('= (a+b)\u00B2',cx,H-16,GRN,20,easeOutCubic((p-0.7)/0.3))
+      // M023: 완전제곱식 (a+b)² — A급 5단계
+      const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
+      const aV=v('a',3),bV=v('b',2),tot=aV+bV
+      const sz=Math.min(68,W*0.17),ox=cx-sz,oy=cy-sz/2-8
+
+      // ① 식 제시
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.2)
+        gText(`① ${aV}²+2×${aV}×${bV}+${bV}² 확인`,cx,18,WHITE,13,p1)
+        gLine(cx-130,28,cx+130,28,'rgba(255,255,255,0.15)',1,p1*0.5)}
+
+      // ② a² 칸
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.22)
+        ctx.save();ctx.globalAlpha=p2*0.3;ctx.fillStyle=VIO;ctx.fillRect(ox,oy,sz,sz);ctx.restore()
+        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=VIO;ctx.strokeRect(ox,oy,sz,sz);ctx.restore()
+        gText(`② a²=${aV*aV}`,ox+sz/2,oy+sz/2,VIO,13,p2)
+        gCircle(ox,oy,4,VIO,true,p2*0.7);gCircle(ox+sz,oy+sz,4,VIO,true,p2*0.7)
+        gLine(ox-14,oy,ox-14,oy+sz,VIO,2,p2*0.6)
+        gText(String(aV),ox-22,oy+sz/2,VIO,11,p2)}
+
+      // ③ 두 ab 칸
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.22)
+        ctx.save();ctx.globalAlpha=p3*0.22;ctx.fillStyle=ORG
+        ctx.fillRect(ox+sz,oy,sz,sz/2+4);ctx.fillRect(ox,oy+sz,sz,sz/2-4);ctx.restore()
+        ctx.save();ctx.globalAlpha=p3*0.85;ctx.strokeStyle=ORG;ctx.lineWidth=2;ctx.shadowBlur=6;ctx.shadowColor=ORG
+        ctx.strokeRect(ox+sz,oy,sz,sz/2+4);ctx.strokeRect(ox,oy+sz,sz,sz/2-4);ctx.restore()
+        gText('③ab',ox+sz+sz/2,oy+(sz/2+4)/2,ORG,12,p3)
+        gText('③ab',ox+sz/2,oy+sz+(sz/2-4)/2,ORG,12,p3)
+        gLine(ox+sz,oy+(sz/2+4)/2,ox+sz/2,oy+sz+(sz/2-4)/2,ORG,1,p3*0.4)}
+
+      // ④ b² 칸
+      if(p>0.57){const p4=easeOutCubic((p-0.57)/0.22)
+        ctx.save();ctx.globalAlpha=p4*0.28;ctx.fillStyle=GRN;ctx.fillRect(ox+sz,oy+sz/2+4,sz,sz/2-4);ctx.restore()
+        ctx.save();ctx.globalAlpha=p4;ctx.strokeStyle=GRN;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=GRN;ctx.strokeRect(ox+sz,oy+sz/2+4,sz,sz/2-4);ctx.restore()
+        gText(`④ b²=${bV*bV}`,ox+sz+sz/2,oy+sz/2+4+(sz/2-4)/2,GRN,13,p4)
+        gCircle(ox+sz+sz,oy+sz,4,GRN,true,p4*0.7)
+        gLine(ox+sz+sz+14,oy,ox+sz+sz+14,oy+sz,GRN,2,p4*0.6)
+        gText(String(bV),ox+sz+sz+22,oy+sz/2,GRN,11,p4)}
+
+      // ⑤ 결론
+      if(p>0.78){const p5=easeOutCubic((p-0.78)/0.22)
+        gCircle(cx,H-14,W*0.42,MINT,false,p5*0.07)
+        gLine(30,H-26,W-30,H-26,'rgba(0,255,204,0.15)',1,p5)
+        gText(`⑤ = (${aV}+${bV})² = (a+b)²`,cx,H-14,MINT,15,p5)}
       break
     }
 
     case 'factorization_diff': case 'factorization_viz': {
-      // M024: 합차 인수분해 L자→재배열
+      // M024: 합차 인수분해 L자→재배열 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      gText('a\u00B2 - b\u00B2',cx,34,'rgba(255,255,255,0.6)',18,easeOutCubic(Math.min(1,p*3)))
-      if(p>0.2){const p2=easeOutCubic((p-0.2)/0.3);gText('L\uC790 \uBAA8\uC591 \u2192 \uC7AC\uBC30\uCE58',cx,cy,'rgba(255,255,255,0.4)',14,p2)}
-      if(p>0.5){const p3=easeOutCubic((p-0.5)/0.3)
-        // (a+b) × (a-b) 직사각형
-        const rw=Math.min(160,W*0.4),rh=Math.min(50,H*0.2)
-        ctx.save();ctx.globalAlpha=p3*0.3;ctx.fillStyle=GRN;ctx.fillRect(cx-rw/2,cy+20,rw,rh);ctx.restore()
-        ctx.save();ctx.globalAlpha=p3;ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.strokeRect(cx-rw/2,cy+20,rw,rh);ctx.restore()
-        gText('(a+b)',cx,cy+20+rh+14,GRN,12,p3);gText('(a-b)',cx-rw/2-24,cy+20+rh/2,VIO,12,p3)}
-      if(p>0.8) gText('= (a+b)(a-b)',cx,H-16,ORG,18,easeOutCubic((p-0.8)/0.2))
+      const aV=v('a',5),bV=v('b',2)
+      const sz=Math.min(90,W*0.23),bsz=sz*(bV/aV)*0.8
+      const ox=cx-sz/2,oy=cy-sz/2-10
+
+      // ① a² 전체
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.2)
+        gText(`① a²-b² : ${aV}²-${bV}²`,cx,16,WHITE,14,p1)
+        gLine(cx-90,26,cx+90,26,'rgba(255,255,255,0.15)',1,p1*0.5)
+        ctx.save();ctx.globalAlpha=p1*0.18;ctx.fillStyle=VIO;ctx.fillRect(ox,oy,sz,sz);ctx.restore()
+        ctx.save();ctx.globalAlpha=p1;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=VIO;ctx.strokeRect(ox,oy,sz,sz);ctx.restore()
+        gText(`② a²=${aV*aV}`,cx,cy,VIO,14,p1)}
+
+      // ② b² 구석 표시
+      if(p>0.22){const p2=easeOutCubic((p-0.22)/0.2)
+        ctx.save();ctx.globalAlpha=p2*0.45;ctx.fillStyle=ORG;ctx.fillRect(ox+sz-bsz,oy+sz-bsz,bsz,bsz);ctx.restore()
+        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=ORG;ctx.lineWidth=2;ctx.shadowBlur=6;ctx.shadowColor=ORG;ctx.strokeRect(ox+sz-bsz,oy+sz-bsz,bsz,bsz);ctx.restore()
+        gText(`② -b²`,ox+sz-bsz/2,oy+sz-bsz/2,ORG,12,p2)
+        gCircle(ox+sz-bsz,oy+sz-bsz,4,ORG,true,p2*0.8)}
+
+      // ③ L자 강조
+      if(p>0.42){const p3=easeOutCubic((p-0.42)/0.2)
+        gLine(ox,oy,ox+sz-bsz,oy,WHITE,2.5,p3);gLine(ox+sz-bsz,oy,ox+sz-bsz,oy+sz,WHITE,2.5,p3)
+        gLine(ox,oy,ox,oy+sz,WHITE,2.5,p3);gLine(ox,oy+sz,ox+sz,oy+sz,WHITE,2.5,p3)
+        gLine(ox+sz,oy+sz-bsz,ox+sz,oy+sz,WHITE,2.5,p3)
+        gText('③ L자 모양 영역',cx-20,oy+sz+14,'rgba(255,255,255,0.45)',11,p3)}
+
+      // ④ 재배열 직사각형
+      if(p>0.6){const p4=easeOutCubic((p-0.6)/0.22)
+        const rw=Math.min(160,W*0.38),rh=Math.min(44,H*0.17)
+        ctx.save();ctx.globalAlpha=p4*0.28;ctx.fillStyle=GRN;ctx.fillRect(cx-rw/2,cy+sz/2+12,rw,rh);ctx.restore()
+        ctx.save();ctx.globalAlpha=p4;ctx.strokeStyle=GRN;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=GRN;ctx.strokeRect(cx-rw/2,cy+sz/2+12,rw,rh);ctx.restore()
+        gText('④ 재배열 직사각형',cx,cy+sz/2+12+rh/2,GRN,13,p4)
+        gLine(cx-rw/2,cy+sz/2+12,cx-rw/2,cy+sz/2+12+rh,VIO,3,p4)
+        gLine(cx-rw/2,cy+sz/2+12+rh,cx+rw/2,cy+sz/2+12+rh,ORG,3,p4)
+        gText('(a-b)',cx-rw/2-24,cy+sz/2+12+rh/2,VIO,12,p4)
+        gText('(a+b)',cx,cy+sz/2+12+rh+14,ORG,12,p4)}
+
+      // ⑤ 결론
+      if(p>0.8){const p5=easeOutCubic((p-0.8)/0.2)
+        gCircle(cx,H-14,W*0.44,MINT,false,p5*0.06)
+        gLine(30,H-26,W-30,H-26,'rgba(0,255,204,0.15)',1,p5)
+        gText(`⑤ a²-b² = (a+b)(a-b)`,cx,H-14,MINT,15,p5)}
       break
     }
 
@@ -1989,53 +2981,201 @@ switch (type) {
     // ══════════════════════════════════════════
 
     case 'simultaneous_eq': {
-      // M025: 연립방정식 가감법 — 두 직선 교점
+      // M025: 연립방정식 가감법 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const sc=28;gLine(30,cy,W-30,cy,'rgba(255,255,255,0.12)',1,p);gLine(cx,20,cx,H-20,'rgba(255,255,255,0.12)',1,p)
-      if(p>0.1){const lp=easeOutCubic((p-0.1)/0.4);ctx.save();ctx.globalAlpha=lp;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=VIO;ctx.beginPath();ctx.moveTo(cx-4*sc,cy+2*sc);ctx.lineTo(cx+4*sc,cy-2*sc);ctx.stroke();ctx.restore();gText('x+y=4',W-60,cy-3*sc,VIO,12,lp)}
-      if(p>0.3){const lp2=easeOutCubic((p-0.3)/0.4);ctx.save();ctx.globalAlpha=lp2;ctx.strokeStyle=GRN;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=GRN;ctx.beginPath();ctx.moveTo(cx-4*sc,cy-sc);ctx.lineTo(cx+4*sc,cy+3*sc);ctx.stroke();ctx.restore();gText('x-y=0',W-60,cy+2*sc,GRN,12,lp2)}
-      if(p>0.55){const ip=easeOutElastic(Math.min(1,(p-0.55)/0.35));gCircle(cx+2*sc,cy-sc,7,ORG,true,ip);gText('(2, 2)',cx+2*sc+20,cy-sc-12,ORG,14,ip)}
-      if(p>0.8){const fp=easeOutCubic((p-0.8)/0.2);gText('\uC2DD \uB354\uD558\uAE30 \u2192 2x=4 \u2192 x=2',cx,28,ORG,12,fp)}
+      const sc=v('sc',28)
+      const solX=v('solX',2),solY=v('solY',2)
+
+      // ① 좌표축
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.2)
+        gLine(30,cy,W-30,cy,'rgba(255,255,255,0.12)',2,p1)
+        gLine(cx,20,cx,H-20,'rgba(255,255,255,0.12)',2,p1)
+        for(let i=-4;i<=4;i++){if(i===0) continue
+          gLine(cx+i*sc,cy-4,cx+i*sc,cy+4,'rgba(255,255,255,0.2)',1,p1)
+          gLine(cx-4,cy-i*sc,cx+4,cy-i*sc,'rgba(255,255,255,0.2)',1,p1)
+          if(i%2===0){gText(String(i),cx+i*sc,cy+14,'rgba(255,255,255,0.25)',9,p1)
+            gText(String(i),cx-14,cy-i*sc,'rgba(255,255,255,0.25)',9,p1)}}
+        gText('① 연립방정식 그래프',cx,16,WHITE,13,p1)}
+
+      // ② 직선1: x+y=4
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.25)
+        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=VIO
+        ctx.beginPath();ctx.moveTo(cx-4*sc,cy+4*sc-4*sc);ctx.lineTo(cx+4*sc,cy-4*sc+4*sc);ctx.stroke();ctx.restore()
+        gText('② x+y=4',W-62,cy-3*sc,VIO,12,p2)
+        gCircle(cx+4*sc,cy,4,VIO,false,p2*0.5);gCircle(cx,cy-4*sc,4,VIO,false,p2*0.5)}
+
+      // ③ 직선2: x-y=0
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.25)
+        ctx.save();ctx.globalAlpha=p3;ctx.strokeStyle=GRN;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=GRN
+        ctx.beginPath();ctx.moveTo(cx-4*sc,cy+4*sc);ctx.lineTo(cx+4*sc,cy-4*sc);ctx.stroke();ctx.restore()
+        gText('③ x-y=0',W-62,cy-2*sc,GRN,12,p3)
+        gCircle(cx,cy,4,GRN,false,p3*0.5)}
+
+      // ④ 교점 표시
+      if(p>0.58){const p4=easeOutElastic(Math.min(1,(p-0.58)/0.3))
+        gCircle(cx+solX*sc,cy-solY*sc,8,ORG,true,p4)
+        gLine(cx+solX*sc,cy,cx+solX*sc,cy-solY*sc,ORG,1.5,p4*0.5)
+        gLine(cx,cy-solY*sc,cx+solX*sc,cy-solY*sc,ORG,1.5,p4*0.5)
+        gText(`④ (${solX}, ${solY})`,cx+solX*sc+22,cy-solY*sc-14,ORG,14,p4)}
+
+      // ⑤ 가감법 결론
+      if(p>0.78){const p5=easeOutCubic((p-0.78)/0.22)
+        gLine(30,H-26,W-30,H-26,'rgba(0,255,204,0.15)',1,p5)
+        gCircle(cx,H-14,W*0.45,MINT,false,p5*0.06)
+        gText(`⑤ 더하기: 2x=4 → x=${solX}, y=${solY}`,cx,H-14,MINT,13,p5)}
       break
     }
 
     case 'simultaneous_sub': {
-      // M026: 연립방정식 대입법
+      // M026: 연립방정식 대입법 — A급 5단계 (완전 재작성)
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const steps=[{t:'y = 2x',c:VIO},{t:'x + 2x = 6',c:GRN,n:'y \uB300\uC785'},{t:'3x = 6 \u2192 x = 2',c:ORG},{t:'y = 2\u00D72 = 4',c:ORG}]
-      steps.forEach((s,i)=>{const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.5-i*0.4)));gText(s.t,cx,cy-50+i*32,s.c,i===0?18:15,prog);if(s.n&&prog>0.3) gText(s.n,cx+100,cy-50+i*32,'rgba(255,255,255,0.3)',11,prog*0.7)})
-      if(p>0.85) gText('x=2, y=4',cx,H-16,ORG,18,easeOutCubic((p-0.85)/0.15))
+      const k=v('k',2),s=v('s',6)
+      // y=kx, x+kx=s → x(1+k)=s → x=s/(1+k), y=k*s/(1+k)
+      const xAns=Math.round(s/(1+k)*100)/100, yAns=Math.round(k*xAns*100)/100
+      const sc=26
+
+      // ① 연립방정식 제시
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.2)
+        gText('① 연립방정식 대입법',cx,16,WHITE,14,p1)
+        gLine(cx-110,26,cx+110,26,'rgba(255,255,255,0.15)',1,p1*0.5)
+        // 두 식 박스
+        ctx.save();ctx.globalAlpha=p1*0.15;ctx.fillStyle=VIO;ctx.fillRect(cx-100,34,100,28);ctx.restore()
+        ctx.save();ctx.globalAlpha=p1*0.7;ctx.strokeStyle=VIO;ctx.lineWidth=1.5;ctx.strokeRect(cx-100,34,100,28);ctx.restore()
+        ctx.save();ctx.globalAlpha=p1*0.15;ctx.fillStyle=GRN;ctx.fillRect(cx+2,34,100,28);ctx.restore()
+        ctx.save();ctx.globalAlpha=p1*0.7;ctx.strokeStyle=GRN;ctx.lineWidth=1.5;ctx.strokeRect(cx+2,34,100,28);ctx.restore()
+        gText(`y = ${k}x`,cx-50,48,VIO,14,p1)
+        gText(`x + y = ${s}`,cx+52,48,GRN,14,p1)}
+
+      // ② 대입 과정
+      if(p>0.2){const p2=easeOutCubic((p-0.2)/0.25)
+        gLine(cx-90,cy-32,cx+90,cy-32,'rgba(255,165,0,0.2)',1,p2*0.6)
+        gText(`② y=${k}x 대입:`,cx,cy-44,ORG,13,p2)
+        gText(`x + ${k}x = ${s}`,cx,cy-28,ORG,16,p2)
+        // 화살표
+        ctx.save();ctx.globalAlpha=p2*0.5;ctx.strokeStyle=ORG;ctx.lineWidth=1.5
+        ctx.beginPath();ctx.moveTo(cx-50,48+28);ctx.quadraticCurveTo(cx-50,cy-44,cx-40,cy-44);ctx.stroke()
+        ctx.restore()}
+
+      // ③ x 정리
+      if(p>0.42){const p3=easeOutCubic((p-0.42)/0.22)
+        gLine(cx-80,cy+2,cx+80,cy+2,'rgba(83,74,183,0.3)',1,p3*0.5)
+        gText(`③ ${1+k}x = ${s}`,cx,cy-6,VIO,16,p3)
+        gCircle(cx,cy-6,55,VIO,false,p3*0.15)
+        gLine(cx-40,cy+8,cx+40,cy+8,'rgba(255,255,255,0.2)',1,p3*0.4)
+        gText(`x = ${s} ÷ ${1+k} = ${xAns}`,cx,cy+22,VIO,14,p3)}
+
+      // ④ y 대입 계산
+      if(p>0.62){const p4=easeOutCubic((p-0.62)/0.22)
+        gLine(cx-80,cy+42,cx+80,cy+42,'rgba(29,158,117,0.3)',1,p4*0.5)
+        gText(`④ y = ${k}×${xAns} = ${yAns}`,cx,cy+56,GRN,15,p4)
+        gCircle(cx,cy+56,55,GRN,false,p4*0.15)}
+
+      // ⑤ 해 강조
+      if(p>0.8){const p5=easeOutCubic((p-0.8)/0.2)
+        gLine(30,H-28,W-30,H-28,'rgba(0,255,204,0.15)',1,p5)
+        gCircle(cx,H-14,W*0.44,MINT,false,p5*0.06)
+        gText(`⑤ 해: x=${xAns},  y=${yAns}`,cx,H-14,MINT,15,p5)}
       break
     }
 
     case 'quadratic_eq_factor': {
-      // M027: 이차방정식 인수분해 — 포물선 교점
+      // M027: 이차방정식 인수분해 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
       const r1=v('r1',2),r2=v('r2',3)
-      const sc2=30,scY=16,baseY=cy+40
+      const scX=28,scY=14,baseY=cy+38
       const qb=-(r1+r2),qc=r1*r2,mid=(r1+r2)/2
-      gLine(30,baseY,W-30,baseY,'rgba(255,255,255,0.12)',1,p);gLine(cx,20,cx,H-20,'rgba(255,255,255,0.12)',1,p)
-      gText(`x\u00B2${qb<0?'':'+'}${qb}x${qc<0?'':'+'}${qc}=0`,cx,28,'rgba(255,255,255,0.5)',16,easeOutCubic(Math.min(1,p*3)))
-      if(p>0.15){const cp=easeOutCubic((p-0.15)/0.5);ctx.save();ctx.globalAlpha=cp;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=VIO;ctx.beginPath();let st=false;for(let x=mid-3.5;x<=mid+3.5;x+=0.05){const y2=x*x+qb*x+qc;const sx=cx+(x-mid)*sc2,sy=baseY-y2*scY;if(sy<20||sy>H-20){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)};ctx.stroke();ctx.restore()}
-      if(p>0.55){const rp=easeOutElastic(Math.min(1,(p-0.55)/0.3));gCircle(cx+(r1-mid)*sc2,baseY,6,ORG,true,rp);gCircle(cx+(r2-mid)*sc2,baseY,6,ORG,true,rp);gText(`x=${r1}`,cx+(r1-mid)*sc2,baseY+16,ORG,12,rp);gText(`x=${r2}`,cx+(r2-mid)*sc2,baseY+16,ORG,12,rp)}
-      if(p>0.8) gText(`(x-${r1})(x-${r2})=0`,cx,H-16,GRN,16,easeOutCubic((p-0.8)/0.2))
+
+      // ① 좌표축 + 수식
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.2)
+        gLine(30,baseY,W-30,baseY,'rgba(255,255,255,0.12)',2,p1)
+        gLine(cx,18,cx,H-18,'rgba(255,255,255,0.12)',2,p1)
+        for(let i=-4;i<=4;i++){if(i===0) continue
+          gLine(cx+i*scX,baseY-4,cx+i*scX,baseY+4,'rgba(255,255,255,0.2)',1,p1)
+          if(i%2===0) gText(String(i+Math.round(mid)),cx+i*scX,baseY+14,'rgba(255,255,255,0.25)',9,p1)}
+        const sgB=qb<0?'':'+',sgC=qc<0?'':'+',eqStr=`① x²${sgB}${qb}x${sgC}${qc}=0`
+        gText(eqStr,cx,18,WHITE,13,p1)}
+
+      // ② 포물선 그리기
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.3)
+        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=VIO
+        ctx.beginPath();let st=false
+        for(let x=mid-3.8;x<=mid+3.8;x+=0.04){const y2=(x-r1)*(x-r2);const sx=cx+(x-mid)*scX,sy=baseY-y2*scY
+          if(sy<14||sy>H-14){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)}
+        ctx.stroke();ctx.restore()
+        // 대칭축
+        gLine(cx+(mid-mid)*scX,baseY-8,cx+(mid-mid)*scX,18,'rgba(255,255,255,0.15)',1,p2*0.5)
+        gText('② 포물선',cx+60,32,VIO,12,p2)}
+
+      // ③ x축 교점 수직선
+      if(p>0.46){const p3=easeOutCubic((p-0.46)/0.22)
+        gLine(cx+(r1-mid)*scX,baseY-4,cx+(r1-mid)*scX,baseY+20,ORG,2,p3)
+        gLine(cx+(r2-mid)*scX,baseY-4,cx+(r2-mid)*scX,baseY+20,ORG,2,p3)
+        gText('③ x축 교점',cx,baseY-22,'rgba(255,165,0,0.5)',11,p3)}
+
+      // ④ 교점 원 + 라벨
+      if(p>0.6){const p4=easeOutElastic(Math.min(1,(p-0.6)/0.3))
+        gCircle(cx+(r1-mid)*scX,baseY,7,ORG,true,p4)
+        gCircle(cx+(r2-mid)*scX,baseY,7,ORG,true,p4)
+        gText(`④ x=${r1}`,cx+(r1-mid)*scX,baseY+28,ORG,13,p4)
+        gText(`x=${r2}`,cx+(r2-mid)*scX,baseY+28,ORG,13,p4)}
+
+      // ⑤ 인수분해식
+      if(p>0.8){const p5=easeOutCubic((p-0.8)/0.2)
+        gLine(30,H-26,W-30,H-26,'rgba(0,255,204,0.15)',1,p5)
+        gCircle(cx,H-14,W*0.44,MINT,false,p5*0.06)
+        gText(`⑤ (x-${r1})(x-${r2})=0`,cx,H-14,MINT,15,p5)}
       break
     }
 
     case 'quadratic_formula_viz': {
-      // M028: 근의 공식 — 유도+포물선
+      // M028: 근의 공식 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
       const qa=v('a',1),qb2=v('b',-3),qc2=v('c',2)
       const disc=qb2*qb2-4*qa*qc2,sqrtDisc=disc>=0?Math.sqrt(disc):0
-      const qr1=(-qb2-sqrtDisc)/(2*qa),qr2=(-qb2+sqrtDisc)/(2*qa)
+      const qr1=Math.round((-qb2-sqrtDisc)/(2*qa)*100)/100
+      const qr2=Math.round((-qb2+sqrtDisc)/(2*qa)*100)/100
       const qMid=(qr1+qr2)/2
-      const steps2=[{t:'ax\u00B2+bx+c=0',c:WHITE},{t:'x = (-b\u00B1\u221A(b\u00B2-4ac)) / 2a',c:VIO},{t:`\uC608: a=${qa},b=${qb2},c=${qc2}`,c:GRN},{t:`x = (${-qb2}\u00B1\u221A${disc})/2 = ${qr2} \uB610\uB294 ${qr1}`,c:ORG}]
-      steps2.forEach((s,i)=>{const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.2-i*0.35)));gText(s.t,cx,34+i*30,s.c,i===1?16:14,prog)})
-      // 포물선
-      if(p>0.6){const pp=easeOutCubic((p-0.6)/0.35);const sc3=25,baseY2=cy+60;gLine(30,baseY2,W-30,baseY2,'rgba(255,255,255,0.1)',1,pp)
-        ctx.save();ctx.globalAlpha=pp;ctx.strokeStyle=VIO;ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor=VIO;ctx.beginPath();let st=false
-        for(let x=qMid-2.5;x<=qMid+2.5;x+=0.05){const y2=qa*x*x+qb2*x+qc2;const sx=cx+(x-qMid)*sc3,sy=baseY2-y2*sc3*0.6;if(sy<20||sy>H-20){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)};ctx.stroke();ctx.restore()
-        gCircle(cx+(qr1-qMid)*sc3,baseY2,5,ORG,true,pp);gCircle(cx+(qr2-qMid)*sc3,baseY2,5,ORG,true,pp)}
+      const sc3=24,baseY2=cy+55
+
+      // ① 표준형 제시
+      if(p>0.02){const p1=easeOutCubic((p-0.02)/0.18)
+        gText('① ax²+bx+c=0',cx,18,WHITE,14,p1)
+        gLine(cx-100,28,cx+100,28,'rgba(255,255,255,0.15)',1,p1*0.5)}
+
+      // ② 근의 공식
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.22)
+        gText('② x = (-b±√(b²-4ac)) / 2a',cx,cy-60,VIO,14,p2)
+        gLine(cx-140,cy-48,cx+140,cy-48,VIO,1,p2*0.4)
+        gCircle(cx,cy-60,80,VIO,false,p2*0.1)}
+
+      // ③ 판별식 계산
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.22)
+        gText(`③ 판별식 D = ${qb2}²-4×${qa}×${qc2} = ${disc}`,cx,cy-26,GRN,13,p3)
+        gLine(cx-140,cy-14,cx+140,cy-14,GRN,1,p3*0.4)}
+
+      // ④ 포물선 + 교점
+      if(p>0.55){const p4=easeOutCubic((p-0.55)/0.28)
+        gLine(30,baseY2,W-30,baseY2,'rgba(255,255,255,0.1)',1.5,p4)
+        gLine(cx,baseY2-100,cx,baseY2+20,'rgba(255,255,255,0.1)',1.5,p4*0.5)
+        ctx.save();ctx.globalAlpha=p4;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=VIO
+        ctx.beginPath();let st=false
+        for(let x=qMid-2.8;x<=qMid+2.8;x+=0.04){const y2=qa*x*x+qb2*x+qc2;const sx=cx+(x-qMid)*sc3,sy=baseY2-y2*sc3*0.65
+          if(sy<14||sy>H-14){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)}
+        ctx.stroke();ctx.restore()
+        // 꼭짓점
+        const vx=cx,vy=baseY2-qa*(qMid-qMid)*(qMid-qMid)*sc3*0.65+(qb2*qMid+qc2)*sc3*0.65
+        gCircle(vx,vy,4,VIO,true,p4*0.6)
+        gText('④ 포물선',cx+50,baseY2-45,VIO,12,p4)
+        if(disc>=0){gCircle(cx+(qr1-qMid)*sc3,baseY2,6,ORG,true,p4);gCircle(cx+(qr2-qMid)*sc3,baseY2,6,ORG,true,p4)
+          gLine(cx+(qr1-qMid)*sc3,baseY2,cx+(qr1-qMid)*sc3,baseY2+16,ORG,1.5,p4)
+          gLine(cx+(qr2-qMid)*sc3,baseY2,cx+(qr2-qMid)*sc3,baseY2+16,ORG,1.5,p4)}}
+
+      // ⑤ 결론
+      if(p>0.8){const p5=easeOutCubic((p-0.8)/0.2)
+        gLine(30,H-26,W-30,H-26,'rgba(0,255,204,0.15)',1,p5)
+        gCircle(cx,H-14,W*0.46,MINT,false,p5*0.06)
+        const ans=disc>=0?`⑤ x=${qr2} 또는 x=${qr1}`:'⑤ 실수 근 없음 (D<0)'
+        gText(ans,cx,H-14,MINT,14,p5)}
       break
     }
 
@@ -2132,28 +3272,70 @@ switch (type) {
     }
 
     case 'linear_eq_apply': {
-      // M034: 일차방정식 활용 — 문제→식→답
+      // M034: 일차방정식 활용 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      gText('\uC0AC\uACFC x\uAC1C, 500x + 200 = 2200',cx,30,'rgba(255,255,255,0.5)',14,easeOutCubic(Math.min(1,p*3)))
-      if(p>0.2){const p2=easeOutCubic((p-0.2)/0.25);gText('500x = 2000',cx,cy-20,VIO,16,p2)}
-      if(p>0.45){const p3=easeOutCubic((p-0.45)/0.25);gText('x = 4',cx,cy+10,GRN,22,p3)}
-      // 사과 4개 시각화
-      if(p>0.6){const fp=easeOutCubic((p-0.6)/0.3)
-        for(let i=0;i<4;i++) gCircle(cx-45+i*30,cy+50,12,ORG,true,fp*0.7)
-        gText('\uC0AC\uACFC 4\uAC1C!',cx,cy+75,ORG,14,fp)}
+      const price=v('price',500),extra=v('extra',200),total2=v('total',2200)
+      const ans=Math.round((total2-extra)/price)
+      // ① 문제 제시
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.15))
+        gText('① 문제: 사과 x개, 500x+200=2200',cx,22,WHITE,13,p1)
+        gLine(M,38,W-M,38,'rgba(255,255,255,0.1)',1,p1)}
+      // ② 수직선 시각화
+      if(p>0.15){const p2=easeOutCubic((p-0.15)/0.2)
+        gLine(40,cy-30,W-40,cy-30,'rgba(255,255,255,0.2)',1.5,p2)
+        gLine(40,cy-30,40,cy-22,'rgba(255,255,255,0.3)',1.5,p2)
+        gLine(W-40,cy-30,W-40,cy-22,'rgba(255,255,255,0.3)',1.5,p2)
+        gText('0',40,cy-14,VIO,11,p2);gText(String(total2),W-40,cy-14,ORG,11,p2)
+        gText(`② 전체 ${total2}원`,cx,cy-46,VIO,12,p2)}
+      // ③ 등식 변환
+      if(p>0.35){const p3=easeOutCubic((p-0.35)/0.2)
+        gText('③ 500x = 2200 − 200 = 2000',cx,cy+5,VIO,14,p3)
+        gLine(cx-120,cy+18,cx+120,cy+18,VIO,1,p3*0.4)}
+      // ④ 해 강조
+      if(p>0.55){const p4=easeOutCubic((p-0.55)/0.2)
+        gText(`④ x = 2000 ÷ 500 = ${ans}`,cx,cy+40,GRN,18,p4)
+        gCircle(cx,cy+40,36,GRN,false,p4*0.5)}
+      // ⑤ 사과 ans개 시각화
+      if(p>0.75){const p5=easeOutCubic((p-0.75)/0.2)
+        for(let i=0;i<ans;i++){const px=cx-(ans-1)*18+i*36;gCircle(px,cy+80,14,ORG,true,p5*0.8);gText(String(i+1),px,cy+80,'#000',10,p5)}
+        gText(`⑤ 사과 ${ans}개 확인!`,cx,cy+102,ORG,13,p5)
+        gLine(cx-ans*20,cy+92,cx+ans*20,cy+92,ORG,1.5,p5*0.5)}
       break
     }
 
     case 'parabola_basic': {
-      // M035: y=ax² — a=1,2,-1 비교
+      // M035: y=ax² — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const sc=30,scY=12,baseY=cy+50
-      gLine(30,baseY,W-30,baseY,'rgba(255,255,255,0.12)',1,p);gLine(cx,20,cx,H-20,'rgba(255,255,255,0.12)',1,p)
-      const curves=[{a:1,c:VIO,l:'a=1'},{a:2,c:GRN,l:'a=2'},{a:-1,c:ORG,l:'a=-1'}]
-      curves.forEach((cv,ci)=>{if(p>0.1+ci*0.2){const cp=easeOutCubic((p-0.1-ci*0.2)/0.5)
-        ctx.save();ctx.globalAlpha=cp;ctx.strokeStyle=cv.c;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=cv.c;ctx.beginPath();let st=false
-        for(let x=-4;x<=4;x+=0.05){const y2=cv.a*x*x;const sx=cx+x*sc,sy=baseY-y2*scY;if(sy<20||sy>H-20){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)};ctx.stroke();ctx.restore()
-        gText(cv.l,cx+3.5*sc,baseY-cv.a*3.5*3.5*scY+(cv.a<0?20:-12),cv.c,11,cp)}})
+      const sc=26,scY=11,baseY=cy+40
+      // ① 좌표축
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.12))
+        gLine(30,baseY,W-30,baseY,'rgba(255,255,255,0.2)',1.5,p1)
+        gLine(cx,20,cx,H-20,'rgba(255,255,255,0.2)',1.5,p1)
+        gText('① 좌표축',cx,H-14,'rgba(255,255,255,0.35)',11,p1)
+        gText('x',W-20,baseY-10,'rgba(255,255,255,0.3)',11,p1)
+        gText('y',cx+10,24,'rgba(255,255,255,0.3)',11,p1)}
+      // ② a=1 포물선
+      if(p>0.15){const cp=easeOutCubic((p-0.15)/0.22)
+        ctx.save();ctx.globalAlpha=cp;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=VIO;ctx.beginPath();let st=false
+        for(let x=-4;x<=4;x+=0.05){const yv=x*x;const sx=cx+x*sc,sy=baseY-yv*scY;if(sy<18||sy>H-18){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)};ctx.stroke();ctx.restore()
+        gText('② a=1',cx+3*sc,baseY-9*scY-12,VIO,12,cp)
+        gCircle(cx,baseY,5,VIO,true,cp)}
+      // ③ a=2 포물선
+      if(p>0.38){const cp=easeOutCubic((p-0.38)/0.22)
+        ctx.save();ctx.globalAlpha=cp;ctx.strokeStyle=GRN;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=GRN;ctx.beginPath();let st=false
+        for(let x=-4;x<=4;x+=0.05){const yv=2*x*x;const sx=cx+x*sc,sy=baseY-yv*scY;if(sy<18||sy>H-18){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)};ctx.stroke();ctx.restore()
+        gText('③ a=2 더 좁음',cx+2.2*sc,baseY-2*4*scY-12,GRN,12,cp)
+        gCircle(cx,baseY,5,GRN,true,cp)}
+      // ④ a=-1 포물선
+      if(p>0.6){const cp=easeOutCubic((p-0.6)/0.22)
+        ctx.save();ctx.globalAlpha=cp;ctx.strokeStyle=ORG;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=ORG;ctx.beginPath();let st=false
+        for(let x=-4;x<=4;x+=0.05){const yv=-x*x;const sx=cx+x*sc,sy=baseY-yv*scY;if(sy<18||sy>H-18){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)};ctx.stroke();ctx.restore()
+        gText('④ a=-1 아래로',cx+2.5*sc,baseY+9*scY+14,ORG,12,cp)
+        gLine(cx,baseY-5,cx,baseY+5,ORG,2,cp)}
+      // ⑤ 결론
+      if(p>0.82){const p5=easeOutCubic((p-0.82)/0.18)
+        gText('⑤ a>0 위로 / a<0 아래로 / |a|클수록 좁음',cx,H-14,WHITE,11,p5)
+        gLine(40,H-24,W-40,H-24,'rgba(255,255,255,0.1)',1,p5)}
       break
     }
 
@@ -2174,15 +3356,36 @@ switch (type) {
     }
 
     case 'parabola_vertex': {
-      // M037: 꼭짓점+대칭축
+      // M037: 꼭짓점+대칭축 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const sc=28,scY=14,baseY=cy+50
-      gLine(30,baseY,W-30,baseY,'rgba(255,255,255,0.12)',1,p);gLine(cx,20,cx,H-20,'rgba(255,255,255,0.12)',1,p)
-      const pvH=v('h',1),pvK=v('k',-4)
-      if(p>0.1){const cp=easeOutCubic((p-0.1)/0.5);ctx.save();ctx.globalAlpha=cp;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=VIO;ctx.beginPath();let st=false
-        for(let x=pvH-4;x<=pvH+4;x+=0.05){const y2=(x-pvH)*(x-pvH)+pvK;const sx=cx+(x-pvH)*sc+pvH*sc,sy=baseY-y2*scY;if(sy<20||sy>H-20){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)};ctx.stroke();ctx.restore()}
-      if(p>0.5){const vp=easeOutElastic(Math.min(1,(p-0.5)/0.3));gCircle(cx+pvH*sc,baseY-pvK*scY,7,ORG,true,vp);gText(`\uAF2D\uC9D3\uC810 (${pvH},${pvK})`,cx+pvH*sc+16,baseY-pvK*scY+14,ORG,12,vp)
-        gLine(cx+pvH*sc,20,cx+pvH*sc,H-20,GRN,1.5,vp*0.4);gText(`\uB300\uCE6D\uCD95 x=${pvH}`,cx+pvH*sc+10,30,GRN,11,vp)}
+      const sc=26,scY=13,baseY=cy+40
+      const pvH=v('h',1),pvK=v('k',-3)
+      const vx=cx+pvH*sc, vy=baseY-pvK*scY
+      // ① 좌표축
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.12))
+        gLine(30,baseY,W-30,baseY,'rgba(255,255,255,0.2)',1.5,p1)
+        gLine(cx,20,cx,H-20,'rgba(255,255,255,0.2)',1.5,p1)
+        gText('① 좌표축',cx,H-14,'rgba(255,255,255,0.3)',10,p1)}
+      // ② 포물선 그리기
+      if(p>0.15){const cp=easeOutCubic((p-0.15)/0.25)
+        ctx.save();ctx.globalAlpha=cp;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=VIO;ctx.beginPath();let st=false
+        for(let x=pvH-4.5;x<=pvH+4.5;x+=0.05){const yv=(x-pvH)*(x-pvH)+pvK;const sx=cx+x*sc,sy=baseY-yv*scY;if(sy<16||sy>H-16){st=false;continue};if(!st){ctx.moveTo(sx,sy);st=true}else ctx.lineTo(sx,sy)};ctx.stroke();ctx.restore()
+        gText(`② y=(x−${pvH})²+${pvK}`,cx-60,22,VIO,12,cp)}
+      // ③ 꼭짓점 표시
+      if(p>0.4){const p3=easeOutElastic(Math.min(1,(p-0.4)/0.25))
+        gCircle(vx,vy,8,ORG,true,p3)
+        gLine(vx-14,vy,vx+14,vy,ORG,1.5,p3*0.6)
+        gLine(vx,vy-14,vx,vy+14,ORG,1.5,p3*0.6)
+        gText(`③ 꼭짓점 (${pvH},${pvK})`,vx+20,vy+16,ORG,12,p3)}
+      // ④ 대칭축
+      if(p>0.6){const p4=easeOutCubic((p-0.6)/0.2)
+        gLine(vx,16,vx,H-16,GRN,2,p4*0.5)
+        gText(`④ 대칭축 x=${pvH}`,vx+12,30,GRN,12,p4)
+        gCircle(vx,baseY,5,GRN,true,p4*0.7)}
+      // ⑤ 최솟값/최댓값
+      if(p>0.8){const p5=easeOutCubic((p-0.8)/0.2)
+        gText(`⑤ 최솟값 = ${pvK} (a>0 위로 볼록)`,cx,H-14,WHITE,11,p5)
+        gLine(40,H-24,W-40,H-24,'rgba(255,255,255,0.08)',1,p5)}
       break
     }
 
@@ -2238,27 +3441,76 @@ switch (type) {
     }
 
     case 'simul_eq_apply': {
-      // M041: 연립방정식 활용
+      // M041: 연립방정식 활용 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      gText('\uBB38\uC7A5 \u2192 \uC2DD 2\uAC1C \u2192 \uAD50\uC810 = \uB2F5',cx,30,'rgba(255,255,255,0.5)',14,easeOutCubic(Math.min(1,p*3)))
-      const sc=22;if(p>0.2){gLine(30,cy+20,W-30,cy+20,'rgba(255,255,255,0.1)',1,p);gLine(cx,40,cx,H-20,'rgba(255,255,255,0.1)',1,p)}
-      if(p>0.3){const lp=easeOutCubic((p-0.3)/0.3);ctx.save();ctx.globalAlpha=lp;ctx.strokeStyle=VIO;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx-3*sc,cy+20+2*sc);ctx.lineTo(cx+3*sc,cy+20-2*sc);ctx.stroke();ctx.restore()}
-      if(p>0.5){const lp2=easeOutCubic((p-0.5)/0.3);ctx.save();ctx.globalAlpha=lp2;ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx-3*sc,cy+20-sc);ctx.lineTo(cx+3*sc,cy+20+sc);ctx.stroke();ctx.restore()}
-      if(p>0.7){const ip=easeOutElastic(Math.min(1,(p-0.7)/0.25));gCircle(cx+sc,cy+20-sc*0.3,6,ORG,true,ip);gText('\uAD50\uC810 = \uB2F5',cx+sc+18,cy+20-sc*0.3-14,ORG,13,ip)}
+      const sc=24
+      const baseY=cy+20
+      // ① 문제 제시
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.12))
+        gText('① 문제: x+y=7, 2x−y=2',cx,20,WHITE,13,p1)
+        gLine(M,34,W-M,34,'rgba(255,255,255,0.08)',1,p1)}
+      // ② 좌표축
+      if(p>0.12){const p2=easeOutCubic((p-0.12)/0.15)
+        gLine(30,baseY,W-30,baseY,'rgba(255,255,255,0.2)',1.5,p2)
+        gLine(cx,42,cx,H-18,'rgba(255,255,255,0.2)',1.5,p2)
+        gText('② 좌표 설정',cx,H-14,'rgba(255,255,255,0.3)',10,p2)}
+      // ③ 직선1: x+y=7
+      if(p>0.28){const p3=easeOutCubic((p-0.28)/0.22)
+        ctx.save();ctx.globalAlpha=p3;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=VIO
+        ctx.beginPath();ctx.moveTo(cx-3*sc,baseY+3*sc);ctx.lineTo(cx+3*sc,baseY-3*sc);ctx.stroke();ctx.restore()
+        gText('③ x+y=7',cx-2*sc,baseY+2*sc+14,VIO,12,p3)}
+      // ④ 직선2: 2x-y=2
+      if(p>0.5){const p4=easeOutCubic((p-0.5)/0.22)
+        ctx.save();ctx.globalAlpha=p4;ctx.strokeStyle=GRN;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=GRN
+        ctx.beginPath();ctx.moveTo(cx-3*sc,baseY-4*sc);ctx.lineTo(cx+3*sc,baseY+2*sc);ctx.stroke();ctx.restore()
+        gText('④ 2x−y=2',cx+2*sc,baseY-2*sc-14,GRN,12,p4)}
+      // ⑤ 교점 (해)
+      if(p>0.72){const p5=easeOutElastic(Math.min(1,(p-0.72)/0.22))
+        const ix=cx+sc*3/2, iy=baseY-sc*3/2
+        gCircle(ix,iy,8,ORG,true,p5)
+        gLine(ix-16,iy,ix+16,iy,ORG,1.5,p5*0.5)
+        gLine(ix,iy-16,ix,iy+16,ORG,1.5,p5*0.5)
+        gText('⑤ 해: (3, 4)',ix+22,iy-14,ORG,14,p5)
+        gLine(ix,baseY,ix,iy,ORG,1,p5*0.3)
+        gLine(cx,iy,ix,iy,ORG,1,p5*0.3)}
       break
     }
 
     case 'triangle_congruent': {
-      // M042: 삼각형 합동 조건
+      // M042: 삼각형 합동 조건 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const conds=['SSS: \uC138 \uBCC0','SAS: \uB450 \uBCC0+\uB07C\uC778\uAC01','ASA: \uB450 \uAC01+\uB07C\uC778\uBCC0']
-      conds.forEach((c2,i)=>{const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.5-i*0.5)));const y=cy-40+i*40;const color=[VIO,GRN,ORG][i]
-        // 삼각형 쌍
-        const ox=cx-80,sz=25
-        ctx.save();ctx.globalAlpha=prog*0.6;ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ox,y+sz);ctx.lineTo(ox+sz,y);ctx.lineTo(ox+sz*2,y+sz);ctx.closePath();ctx.stroke();ctx.restore()
-        ctx.save();ctx.globalAlpha=prog*0.6;ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(ox+sz*2.5,y+sz);ctx.lineTo(ox+sz*3.5,y);ctx.lineTo(ox+sz*4.5,y+sz);ctx.closePath();ctx.stroke();ctx.restore()
-        gText(c2,cx+40,y+sz/2,color,12,prog)})
-      if(p>0.85) gText('\uAC19\uC73C\uBA74 \u2192 \uD569\uB3D9!',cx,H-16,GRN,16,easeOutCubic((p-0.85)/0.15))
+      const sz=28,triY=[cy-60,cy-10,cy+40]
+      const labels=['SSS: 세 변이 같으면','SAS: 두 변+끼인각','ASA: 두 각+끼인변']
+      const colors=[VIO,GRN,ORG]
+      // ① 제목
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.1))
+        gText('① 합동 조건 3가지',cx,18,WHITE,13,p1)
+        gLine(M,30,W-M,30,'rgba(255,255,255,0.1)',1,p1)}
+      // ② SSS
+      if(p>0.12){const p2=easeOutCubic((p-0.12)/0.2);const ox=W*0.18,y=triY[0]
+        ctx.save();ctx.globalAlpha=p2*0.7;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=VIO
+        ctx.beginPath();ctx.moveTo(ox,y+sz);ctx.lineTo(ox+sz,y);ctx.lineTo(ox+sz*2,y+sz);ctx.closePath();ctx.stroke()
+        ctx.setLineDash([4,3]);ctx.globalAlpha=p2*0.5;ctx.beginPath();ctx.moveTo(ox+sz*2.6,y+sz);ctx.lineTo(ox+sz*3.6,y);ctx.lineTo(ox+sz*4.6,y+sz);ctx.closePath();ctx.stroke();ctx.restore()
+        gLine(ox,y+sz,ox+sz*2.6,y+sz,VIO,1.5,p2*0.4)
+        gText('② SSS: 세 변 같음',W*0.55,y+sz/2,VIO,12,p2)}
+      // ③ SAS
+      if(p>0.35){const p3=easeOutCubic((p-0.35)/0.2);const ox=W*0.18,y=triY[1]
+        ctx.save();ctx.globalAlpha=p3*0.7;ctx.strokeStyle=GRN;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=GRN
+        ctx.beginPath();ctx.moveTo(ox,y+sz);ctx.lineTo(ox+sz,y);ctx.lineTo(ox+sz*2,y+sz);ctx.closePath();ctx.stroke()
+        ctx.setLineDash([4,3]);ctx.globalAlpha=p3*0.5;ctx.beginPath();ctx.moveTo(ox+sz*2.6,y+sz);ctx.lineTo(ox+sz*3.6,y);ctx.lineTo(ox+sz*4.6,y+sz);ctx.closePath();ctx.stroke();ctx.restore()
+        gCircle(ox+sz,y,6,GRN,true,p3*0.8)
+        gText('③ SAS: 두 변+끼인각',W*0.55,y+sz/2,GRN,12,p3)}
+      // ④ ASA
+      if(p>0.58){const p4=easeOutCubic((p-0.58)/0.2);const ox=W*0.18,y=triY[2]
+        ctx.save();ctx.globalAlpha=p4*0.7;ctx.strokeStyle=ORG;ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=ORG
+        ctx.beginPath();ctx.moveTo(ox,y+sz);ctx.lineTo(ox+sz,y);ctx.lineTo(ox+sz*2,y+sz);ctx.closePath();ctx.stroke()
+        ctx.setLineDash([4,3]);ctx.globalAlpha=p4*0.5;ctx.beginPath();ctx.moveTo(ox+sz*2.6,y+sz);ctx.lineTo(ox+sz*3.6,y);ctx.lineTo(ox+sz*4.6,y+sz);ctx.closePath();ctx.stroke();ctx.restore()
+        gCircle(ox,y+sz,5,ORG,true,p4*0.8);gCircle(ox+sz*2,y+sz,5,ORG,true,p4*0.8)
+        gText('④ ASA: 두 각+끼인변',W*0.55,y+sz/2,ORG,12,p4)}
+      // ⑤ 결론
+      if(p>0.82){const p5=easeOutCubic((p-0.82)/0.18)
+        gText('⑤ 세 조건 중 하나 → 합동!',cx,H-14,WHITE,13,p5)
+        gLine(40,H-26,W-40,H-26,'rgba(255,255,255,0.1)',1,p5)}
       break
     }
 
@@ -2280,21 +3532,41 @@ switch (type) {
     }
 
     case 'parallelogram_viz': {
-      // M044: 평행사변형 — 대변 같고 대각선 이등분
+      // M044: 평행사변형 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const pw=140,ph=80,skew=35,ox=cx-pw/2,oy=cy-ph/2
+      const pw=140,ph=74,skew=32,ox=cx-pw/2-16,oy=cy-ph/2
       const pts=[{x:ox+skew,y:oy},{x:ox+pw+skew,y:oy},{x:ox+pw,y:oy+ph},{x:ox,y:oy+ph}]
-      if(p>0.05){const p1=easeOutCubic((p-0.05)/0.25);ctx.save();ctx.globalAlpha=p1*0.8;ctx.strokeStyle=WHITE;ctx.lineWidth=2.5
-        ctx.beginPath();pts.forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y));ctx.closePath();ctx.stroke();ctx.restore()}
-      // 대변 같음
-      if(p>0.3){const sp=easeOutCubic((p-0.3)/0.25)
-        gLine(pts[0].x,pts[0].y,pts[1].x,pts[1].y,VIO,3,sp);gLine(pts[2].x,pts[2].y,pts[3].x,pts[3].y,VIO,3,sp)
-        gLine(pts[1].x,pts[1].y,pts[2].x,pts[2].y,GRN,3,sp);gLine(pts[3].x,pts[3].y,pts[0].x,pts[0].y,GRN,3,sp)}
-      // 대각선 이등분
-      if(p>0.55){const dp=easeOutCubic((p-0.55)/0.3)
-        gLine(pts[0].x,pts[0].y,pts[2].x,pts[2].y,ORG,1.5,dp*0.5);gLine(pts[1].x,pts[1].y,pts[3].x,pts[3].y,ORG,1.5,dp*0.5)
-        const midX=(pts[0].x+pts[2].x)/2,midY=(pts[0].y+pts[2].y)/2
-        gCircle(midX,midY,5,ORG,true,dp);gText('\uC774\uB4F1\uBD84',midX+10,midY-14,ORG,11,dp)}
+      const midX=(pts[0].x+pts[2].x)/2,midY=(pts[0].y+pts[2].y)/2
+      // ① 평행사변형 그리기
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.15))
+        ctx.save();ctx.globalAlpha=p1*0.12;ctx.fillStyle=WHITE
+        ctx.beginPath();pts.forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y));ctx.closePath();ctx.fill();ctx.restore()
+        ctx.save();ctx.globalAlpha=p1*0.8;ctx.strokeStyle=WHITE;ctx.lineWidth=2.5
+        ctx.beginPath();pts.forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y));ctx.closePath();ctx.stroke();ctx.restore()
+        gText('① 평행사변형',cx,H-14,'rgba(255,255,255,0.3)',10,p1)}
+      // ② 대변 같음 (위아래 = VIO, 좌우 = GRN)
+      if(p>0.2){const p2=easeOutCubic((p-0.2)/0.2)
+        gLine(pts[0].x,pts[0].y,pts[1].x,pts[1].y,VIO,3.5,p2)
+        gLine(pts[3].x,pts[3].y,pts[2].x,pts[2].y,VIO,3.5,p2)
+        gText('② AB=DC',cx,pts[0].y-14,VIO,12,p2)
+        gText('=',cx-10,pts[0].y-14,VIO,10,p2*0)}
+      // ③ 옆변 같음
+      if(p>0.4){const p3=easeOutCubic((p-0.4)/0.2)
+        gLine(pts[1].x,pts[1].y,pts[2].x,pts[2].y,GRN,3.5,p3)
+        gLine(pts[0].x,pts[0].y,pts[3].x,pts[3].y,GRN,3.5,p3)
+        gText('③ AD=BC',pts[2].x+14,cy,GRN,12,p3)}
+      // ④ 대각선 그리기
+      if(p>0.6){const p4=easeOutCubic((p-0.6)/0.2)
+        gLine(pts[0].x,pts[0].y,pts[2].x,pts[2].y,ORG,2,p4*0.6)
+        gLine(pts[1].x,pts[1].y,pts[3].x,pts[3].y,ORG,2,p4*0.6)
+        gText('④ 대각선 2개',cx,pts[2].y+18,ORG,12,p4)}
+      // ⑤ 교점(이등분) 강조
+      if(p>0.78){const p5=easeOutElastic(Math.min(1,(p-0.78)/0.2))
+        gCircle(midX,midY,8,ORG,true,p5)
+        gCircle(midX,midY,16,ORG,false,p5*0.4)
+        gText('⑤ 이등분점 O',midX+18,midY-14,ORG,12,p5)
+        gLine(midX-22,midY,midX+22,midY,ORG,1.5,p5*0.5)
+        gLine(midX,midY-18,midX,midY+18,ORG,1.5,p5*0.5)}
       break
     }
 
@@ -2617,49 +3889,176 @@ switch (type) {
     }
 
     case 'pythagorean_triple': {
-      // M046: 피타고라스 수
+      // M046: 피타고라스 수 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
       const triples=[[3,4,5],[5,12,13],[8,15,17]]
-      triples.forEach(([a4,b4,c4],i)=>{const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.5-i*0.5)));const y=34+i*60;const color=[VIO,GRN,ORG][i]
-        gText(`(${a4}, ${b4}, ${c4})`,cx-60,y,color,16,prog)
-        gText(`${a4}\u00B2+${b4}\u00B2=${a4*a4}+${b4*b4}=${c4*c4}=${c4}\u00B2`,cx+60,y,'rgba(255,255,255,0.5)',12,prog)
-        // 미니 직각삼각형
-        const sc=Math.min(1.5,40/c4);const ox=W-80,oy=y-10
-        ctx.save();ctx.globalAlpha=prog*0.6;ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ox,oy+a4*sc);ctx.lineTo(ox+b4*sc,oy+a4*sc);ctx.lineTo(ox,oy);ctx.closePath();ctx.stroke();ctx.restore()
-      })
+      const colors=[VIO,GRN,ORG]
+      const rowY=[cy-52,cy,cy+52]
+      // ① 제목
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.1))
+        gText('① 피타고라스 수: a²+b²=c²',cx,18,WHITE,13,p1)
+        gLine(M,30,W-M,30,'rgba(255,255,255,0.08)',1,p1)}
+      // ② (3,4,5)
+      if(p>0.12){const [a4,b4,c4]=triples[0];const p2=easeOutCubic((p-0.12)/0.2)
+        const sc=Math.min(2,40/c4),ox=W*0.78,y=rowY[0]
+        gText(`② (${a4},${b4},${c4})`,W*0.12,y,colors[0],16,p2)
+        gText(`${a4}²+${b4}²=${a4*a4+b4*b4}=${c4}²`,cx,y,'rgba(255,255,255,0.55)',12,p2)
+        ctx.save();ctx.globalAlpha=p2*0.7;ctx.strokeStyle=colors[0];ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor=colors[0]
+        ctx.beginPath();ctx.moveTo(ox,y+a4*sc);ctx.lineTo(ox+b4*sc,y+a4*sc);ctx.lineTo(ox,y);ctx.closePath();ctx.stroke();ctx.restore()
+        ctx.save();ctx.globalAlpha=p2*0.4;ctx.fillStyle=colors[0];ctx.beginPath();ctx.moveTo(ox,y);ctx.lineTo(ox+b4*sc,y+a4*sc);ctx.lineTo(ox,y+a4*sc);ctx.closePath();ctx.fill();ctx.restore()
+        gCircle(ox,y+a4*sc,3,colors[0],true,p2)}
+      // ③ (5,12,13)
+      if(p>0.38){const [a4,b4,c4]=triples[1];const p3=easeOutCubic((p-0.38)/0.2)
+        const sc=Math.min(1.2,40/c4),ox=W*0.78,y=rowY[1]
+        gText(`③ (${a4},${b4},${c4})`,W*0.12,y,colors[1],16,p3)
+        gText(`${a4}²+${b4}²=${a4*a4+b4*b4}=${c4}²`,cx,y,'rgba(255,255,255,0.55)',12,p3)
+        ctx.save();ctx.globalAlpha=p3*0.7;ctx.strokeStyle=colors[1];ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor=colors[1]
+        ctx.beginPath();ctx.moveTo(ox,y+a4*sc);ctx.lineTo(ox+b4*sc,y+a4*sc);ctx.lineTo(ox,y);ctx.closePath();ctx.stroke();ctx.restore()
+        gCircle(ox,y+a4*sc,3,colors[1],true,p3)}
+      // ④ (8,15,17)
+      if(p>0.6){const [a4,b4,c4]=triples[2];const p4=easeOutCubic((p-0.6)/0.2)
+        const sc=Math.min(0.9,40/c4),ox=W*0.78,y=rowY[2]
+        gText(`④ (${a4},${b4},${c4})`,W*0.12,y,colors[2],16,p4)
+        gText(`${a4}²+${b4}²=${a4*a4+b4*b4}=${c4}²`,cx,y,'rgba(255,255,255,0.55)',12,p4)
+        ctx.save();ctx.globalAlpha=p4*0.7;ctx.strokeStyle=colors[2];ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor=colors[2]
+        ctx.beginPath();ctx.moveTo(ox,y+a4*sc);ctx.lineTo(ox+b4*sc,y+a4*sc);ctx.lineTo(ox,y);ctx.closePath();ctx.stroke();ctx.restore()
+        gCircle(ox,y+a4*sc,3,colors[2],true,p4)}
+      // ⑤ 배수도 피타고라스 수
+      if(p>0.82){const p5=easeOutCubic((p-0.82)/0.18)
+        gText('⑤ 배수도 피타고라스 수: (6,8,10)…',cx,H-14,WHITE,11,p5)
+        gLine(40,H-26,W-40,H-26,'rgba(255,255,255,0.1)',1,p5)}
       break
     }
 
     case 'similarity_viz': case 'similarity_area': {
-      // M048: 닮음비와 넓이비 — 1:2 → 1:4
+      // M048: 닮음비와 넓이비 — FULL REWRITE A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const s1=v('s1',40),s2=v('s2',80)
-      if(p>0.1){const p1=easeOutCubic((p-0.1)/0.3);ctx.save();ctx.globalAlpha=p1*0.3;ctx.fillStyle=VIO;ctx.fillRect(cx-s2-30-s1,cy-s1/2,s1,s1);ctx.restore();ctx.save();ctx.globalAlpha=p1;ctx.strokeStyle=VIO;ctx.lineWidth=2;ctx.strokeRect(cx-s2-30-s1,cy-s1/2,s1,s1);ctx.restore();gText('1',cx-s2-30-s1/2,cy,VIO,14,p1)}
-      if(p>0.35){const p2=easeOutCubic((p-0.35)/0.35);ctx.save();ctx.globalAlpha=p2*0.2;ctx.fillStyle=GRN;ctx.fillRect(cx+10,cy-s2/2,s2,s2);ctx.restore();ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.strokeRect(cx+10,cy-s2/2,s2,s2);ctx.restore();gText('4',cx+10+s2/2,cy,GRN,14,p2)}
-      if(p>0.7) gText('\uB2EE\uC74C\uBE44 1:2 \u2192 \uB113\uC774\uBE44 1:4',cx,H-16,ORG,15,easeOutCubic((p-0.7)/0.3))
+      const ratio=v('ratio',2) // 닮음비 1:ratio
+      const s1=Math.min(40,(H-80)/ratio), s2=s1*ratio
+      const lx=cx-s2*0.7-10, rx=cx+10
+      // ① 제목
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.12))
+        gText(`① 닮음비 1:${ratio} → 넓이비 1:${ratio*ratio}`,cx,18,WHITE,13,p1)
+        gLine(M,30,W-M,30,'rgba(255,255,255,0.08)',1,p1)}
+      // ② 작은 정사각형 (s1×s1)
+      if(p>0.15){const p2=easeOutCubic((p-0.15)/0.22)
+        ctx.save();ctx.globalAlpha=p2*0.35;ctx.fillStyle=VIO;ctx.fillRect(lx,cy-s1/2,s1,s1);ctx.restore()
+        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=VIO;ctx.strokeRect(lx,cy-s1/2,s1,s1);ctx.restore()
+        gLine(lx,cy-s1/2-12,lx+s1,cy-s1/2-12,VIO,1.5,p2)
+        gText(`② 변 = ${s1.toFixed(0)}`,lx+s1/2,cy-s1/2-22,VIO,11,p2)
+        gText(`넓이 = ${(s1*s1).toFixed(0)}`,lx+s1/2,cy+s1/2+16,VIO,11,p2)}
+      // ③ 화살표
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.12)
+        gLine(lx+s1+8,cy,rx-8,cy,'rgba(255,255,255,0.35)',1.5,p3)
+        gText(`×${ratio}`,cx,cy-12,'rgba(255,255,255,0.5)',13,p3)}
+      // ④ 큰 정사각형 (s2×s2)
+      if(p>0.5){const p4=easeOutCubic((p-0.5)/0.25)
+        ctx.save();ctx.globalAlpha=p4*0.2;ctx.fillStyle=GRN;ctx.fillRect(rx,cy-s2/2,s2,s2);ctx.restore()
+        ctx.save();ctx.globalAlpha=p4;ctx.strokeStyle=GRN;ctx.lineWidth=2.5;ctx.shadowBlur=10;ctx.shadowColor=GRN;ctx.strokeRect(rx,cy-s2/2,s2,s2);ctx.restore()
+        gLine(rx,cy-s2/2-12,rx+s2,cy-s2/2-12,GRN,1.5,p4)
+        gText(`④ 변 = ${s2.toFixed(0)}`,rx+s2/2,cy-s2/2-22,GRN,11,p4)
+        gText(`넓이 = ${(s2*s2).toFixed(0)}`,rx+s2/2,cy+s2/2+16,GRN,11,p4)
+        gCircle(rx+s2/2,cy,4,GRN,true,p4*0.5)}
+      // ⑤ 결론
+      if(p>0.8){const p5=easeOutCubic((p-0.8)/0.2)
+        gText(`⑤ 닮음비 1:${ratio} → 넓이비 1:${ratio*ratio}`,cx,H-14,ORG,13,p5)
+        gLine(40,H-26,W-40,H-26,'rgba(255,255,255,0.1)',1,p5)
+        gCircle(lx+s1/2,cy,s1/2+4,ORG,false,p5*0.3)
+        gCircle(rx+s2/2,cy,s2/2+4,ORG,false,p5*0.3)}
       break
     }
 
     case 'similarity_volume': {
-      // M049: 닮음비와 부피비 — 1:2 → 1:8 (등각 블록)
+      // M049: 닮음비와 부피비 — FULL REWRITE A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const s1=v('s1',30),s2=v('s2',50)
-      if(p>0.1){const p1=easeOutCubic((p-0.1)/0.3);ctx.save();ctx.globalAlpha=p1*0.4;ctx.fillStyle=VIO+'66';ctx.strokeStyle=VIO;ctx.lineWidth=2;ctx.fillRect(cx-s2-40,cy-s1/2,s1,s1);ctx.strokeRect(cx-s2-40,cy-s1/2,s1,s1);ctx.restore();gText('1',cx-s2-40+s1/2,cy,VIO,12,p1)}
-      if(p>0.35){const p2=easeOutCubic((p-0.35)/0.35);ctx.save();ctx.globalAlpha=p2*0.3;ctx.fillStyle=GRN+'66';ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.fillRect(cx+20,cy-s2/2,s2,s2);ctx.strokeRect(cx+20,cy-s2/2,s2,s2);ctx.restore();gText('8',cx+20+s2/2,cy,GRN,14,p2)}
-      if(p>0.7) gText('\uB2EE\uC74C\uBE44 1:2 \u2192 \uBD80\uD53C\uBE44 1:8',cx,H-16,ORG,15,easeOutCubic((p-0.7)/0.3))
+      const ratio=v('ratio',2)
+      const s1=Math.min(32,(H-90)/ratio), s2=s1*ratio
+      const lx=cx-s2*0.7-10, rx=cx+10
+      // 등각투영 큐브 그리기 함수
+      const drawCube=(bx:number,by:number,sz:number,col:string,al:number)=>{
+        if(al<=0) return
+        const ex=sz*0.5,ey=sz*0.28
+        ctx.save();ctx.globalAlpha=al*0.18;ctx.fillStyle=col
+        ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(bx+sz,by);ctx.lineTo(bx+sz+ex,by-ey);ctx.lineTo(bx+ex,by-ey);ctx.closePath();ctx.fill()
+        ctx.beginPath();ctx.moveTo(bx+sz,by);ctx.lineTo(bx+sz,by-sz);ctx.lineTo(bx+sz+ex,by-sz-ey);ctx.lineTo(bx+sz+ex,by-ey);ctx.closePath();ctx.fill()
+        ctx.restore()
+        ctx.save();ctx.globalAlpha=al;ctx.strokeStyle=col;ctx.lineWidth=2;ctx.shadowBlur=10;ctx.shadowColor=col
+        gLine(bx,by,bx+sz,by,col,2,al);gLine(bx,by,bx,by-sz,col,2,al)
+        gLine(bx+sz,by,bx+sz,by-sz,col,2,al);gLine(bx,by-sz,bx+sz,by-sz,col,2,al)
+        gLine(bx+sz,by,bx+sz+ex,by-ey,col,2,al);gLine(bx+sz,by-sz,bx+sz+ex,by-sz-ey,col,2,al)
+        gLine(bx+sz+ex,by-ey,bx+sz+ex,by-sz-ey,col,2,al);gLine(bx+sz+ex,by-sz-ey,bx+ex,by-sz-ey,col,2,al)
+        gLine(bx,by-sz,bx+ex,by-sz-ey,col,2,al);gLine(bx+ex,by-sz-ey,bx+sz+ex,by-sz-ey,col,2,al)
+        ctx.restore()}
+      const cubeBase=cy+s1*0.5
+      // ① 제목
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.12))
+        gText(`① 닮음비 1:${ratio} → 부피비 1:${ratio**3}`,cx,18,WHITE,13,p1)
+        gLine(M,30,W-M,30,'rgba(255,255,255,0.08)',1,p1)}
+      // ② 작은 큐브
+      if(p>0.15){const p2=easeOutCubic((p-0.15)/0.22)
+        drawCube(lx,cubeBase,s1,VIO,p2)
+        gText(`② 변 = ${s1.toFixed(0)}`,lx+s1/2,cubeBase+18,VIO,11,p2)
+        gText(`부피 = ${(s1**3).toFixed(0)}`,lx+s1/2,cubeBase+32,VIO,10,p2)}
+      // ③ 화살표
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.14)
+        gLine(lx+s1+8,cubeBase-s1/2,rx-8,cubeBase-s1/2,'rgba(255,255,255,0.35)',1.5,p3)
+        gText(`×${ratio}`,lx+s1+((rx-lx-s1)/2),cubeBase-s1/2-14,'rgba(255,255,255,0.5)',13,p3)}
+      // ④ 큰 큐브
+      if(p>0.52){const p4=easeOutCubic((p-0.52)/0.25)
+        drawCube(rx,cubeBase,s2,GRN,p4)
+        gText(`④ 변 = ${s2.toFixed(0)}`,rx+s2/2,cubeBase+18,GRN,11,p4)
+        gText(`부피 = ${(s2**3).toFixed(0)}`,rx+s2/2,cubeBase+32,GRN,10,p4)
+        gCircle(rx+s2/2,cubeBase-s2/2,5,GRN,true,p4*0.6)}
+      // ⑤ 결론
+      if(p>0.8){const p5=easeOutCubic((p-0.8)/0.2)
+        gText(`⑤ 닮음비 1:${ratio} → 부피비 1:${ratio**3}`,cx,H-14,ORG,13,p5)
+        gLine(40,H-26,W-40,H-26,'rgba(255,255,255,0.1)',1,p5)}
       break
     }
 
     case 'parallel_ratio': case 'parallel_ratio_viz': {
-      // M050: 평행선과 선분의 비
+      // M050: 평행선과 선분의 비 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const triH=120,triW=100
+      const triH=v('triH',115),triW=v('triW',100)
       const A={x:cx,y:cy-triH/2},B={x:cx-triW/2,y:cy+triH/2},C={x:cx+triW/2,y:cy+triH/2}
-      if(p>0.1){const p1=easeOutCubic((p-0.1)/0.3);ctx.save();ctx.globalAlpha=p1*0.8;ctx.strokeStyle=WHITE;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.lineTo(C.x,C.y);ctx.closePath();ctx.stroke();ctx.restore()}
-      // 평행선 DE
-      if(p>0.35){const pp=easeOutCubic((p-0.35)/0.3);const t=0.4;const D={x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t};const E={x:A.x+(C.x-A.x)*t,y:A.y+(C.y-A.y)*t}
-        gLine(D.x-20,D.y,E.x+20,D.y,ORG,2.5,pp);gText('DE \u2225 BC',cx+triW/2+10,D.y,ORG,12,pp)}
-      if(p>0.65){const rp=easeOutCubic((p-0.65)/0.3);gText('AD/DB = AE/EC',cx,H-16,GRN,14,rp)}
+      const t=0.42
+      const D={x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t}
+      const E={x:A.x+(C.x-A.x)*t,y:A.y+(C.y-A.y)*t}
+      // ① 삼각형
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.14))
+        ctx.save();ctx.globalAlpha=p1*0.1;ctx.fillStyle=WHITE
+        ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.lineTo(C.x,C.y);ctx.closePath();ctx.fill();ctx.restore()
+        ctx.save();ctx.globalAlpha=p1*0.8;ctx.strokeStyle=WHITE;ctx.lineWidth=2.5
+        ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.lineTo(C.x,C.y);ctx.closePath();ctx.stroke();ctx.restore()
+        gText('① 삼각형 ABC',cx,A.y-14,WHITE,11,p1)
+        gText('A',A.x-12,A.y-4,WHITE,11,p1)
+        gText('B',B.x-14,B.y+4,WHITE,11,p1)
+        gText('C',C.x+6,C.y+4,WHITE,11,p1)}
+      // ② 꼭짓점 점
+      if(p>0.15){const p2=easeOutCubic((p-0.15)/0.14)
+        gCircle(A.x,A.y,4,VIO,true,p2)
+        gCircle(B.x,B.y,4,VIO,true,p2)
+        gCircle(C.x,C.y,4,VIO,true,p2)
+        gText('② 꼭짓점 A,B,C',cx,H-14,'rgba(255,255,255,0.35)',10,p2)}
+      // ③ 평행선 DE
+      if(p>0.3){const p3=easeOutCubic((p-0.3)/0.2)
+        gLine(D.x-18,D.y,E.x+18,D.y,ORG,2.5,p3)
+        gCircle(D.x,D.y,4,ORG,true,p3);gCircle(E.x,E.y,4,ORG,true,p3)
+        gText('D',D.x-16,D.y-4,ORG,11,p3);gText('E',E.x+8,E.y-4,ORG,11,p3)
+        gText('③ DE ∥ BC',cx+triW/2+16,D.y,ORG,12,p3)}
+      // ④ 비 표시
+      if(p>0.52){const p4=easeOutCubic((p-0.52)/0.2)
+        const adLen=t*triH,dbLen=(1-t)*triH
+        gLine(A.x,A.y,D.x,D.y,GRN,3,p4)
+        gLine(D.x,D.y,B.x,B.y,VIO,3,p4)
+        gText(`④ AD=${adLen.toFixed(0)}`,A.x-48,A.y+20,GRN,11,p4)
+        gText(`DB=${dbLen.toFixed(0)}`,B.x-48,B.y-20,VIO,11,p4)}
+      // ⑤ 비례식 결론
+      if(p>0.75){const p5=easeOutCubic((p-0.75)/0.2)
+        gText('⑤ AD/DB = AE/EC (평행선 비례)',cx,H-14,WHITE,12,p5)
+        gLine(40,H-26,W-40,H-26,'rgba(255,255,255,0.1)',1,p5)
+        gCircle(D.x,D.y,8,GRN,false,p5*0.5)
+        gCircle(E.x,E.y,8,GRN,false,p5*0.5)}
       break
     }
 
@@ -2700,29 +4099,76 @@ switch (type) {
     }
 
     case 'trig_ratio': {
-      // M054: 삼각비 sin/cos/tan
+      // M054: 삼각비 sin/cos/tan — A급 5단계 ①②③④⑤
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const deg=v('angle',30),rad=deg*Math.PI/180,rr=Math.min(75,H/2-25)
-      gLine(cx-rr-20,cy,cx+rr+20,cy,'rgba(255,255,255,0.12)',1,p);gLine(cx,cy-rr-20,cx,cy+rr+20,'rgba(255,255,255,0.12)',1,p)
-      if(p>0.1) gCircle(cx,cy,rr,'rgba(255,255,255,0.12)',false,easeOutCubic((p-0.1)/0.3))
-      if(p>0.3){const hp=easeOutCubic((p-0.3)/0.3);const ex=cx+Math.cos(rad)*rr,ey=cy-Math.sin(rad)*rr
-        gLine(cx,cy,ex,ey,WHITE,2.5,hp);gCircle(ex,ey,4,WHITE,true,hp)
-        if(p>0.5){const sp=easeOutCubic((p-0.5)/0.3);gLine(ex,cy,ex,ey,VIO,2.5,sp);gLine(cx,cy,ex,cy,GRN,2.5,sp)
-          gText(`\uC0AC\uC778=${r(Math.sin(rad))}`,ex+30,(cy+ey)/2,VIO,12,sp);gText(`\uCF54\uC0AC\uC778=${r(Math.cos(rad))}`,(cx+ex)/2,cy+18,GRN,12,sp)}}
-      if(p>0.8) gText(`\uD0C4\uC820\uD2B8=${r(Math.tan(rad))}`,cx,H-16,ORG,14,easeOutCubic((p-0.8)/0.2))
+      const deg=v('angle',30),rad=deg*Math.PI/180,rr=Math.min(72,H/2-28)
+      const ex=cx+Math.cos(rad)*rr, ey=cy-Math.sin(rad)*rr
+      // ① 좌표축+단위원
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.12))
+        gLine(cx-rr-20,cy,cx+rr+20,cy,'rgba(255,255,255,0.2)',1.5,p1)
+        gLine(cx,cy-rr-20,cx,cy+rr+20,'rgba(255,255,255,0.2)',1.5,p1)
+        gCircle(cx,cy,rr,'rgba(255,255,255,0.15)',false,p1)
+        gText('① 단위원',cx+rr+14,cy-10,'rgba(255,255,255,0.4)',10,p1)}
+      // ② 반지름(빗변)
+      if(p>0.15){const p2=easeOutCubic((p-0.15)/0.2)
+        gLine(cx,cy,ex,ey,WHITE,2.5,p2)
+        gCircle(ex,ey,5,WHITE,true,p2)
+        gText(`② r=1, θ=${deg}°`,cx+12,cy-rr+18,WHITE,11,p2)}
+      // ③ sin (세로, VIO)
+      if(p>0.36){const p3=easeOutCubic((p-0.36)/0.2)
+        gLine(ex,ey,ex,cy,VIO,2.5,p3)
+        gText(`③ sin${deg}°=${r(Math.sin(rad))}`,ex+26,(ey+cy)/2,VIO,12,p3)
+        gCircle(ex,cy,4,VIO,true,p3*0.6)}
+      // ④ cos (가로, GRN)
+      if(p>0.56){const p4=easeOutCubic((p-0.56)/0.2)
+        gLine(cx,cy,ex,cy,GRN,2.5,p4)
+        gText(`④ cos${deg}°=${r(Math.cos(rad))}`,(cx+ex)/2,cy+20,GRN,12,p4)
+        gCircle(cx,cy,4,GRN,true,p4*0.6)}
+      // ⑤ tan 결론
+      if(p>0.78){const p5=easeOutCubic((p-0.78)/0.2)
+        gText(`⑤ tan${deg}°=sin/cos=${r(Math.tan(rad))}`,cx,H-14,ORG,13,p5)
+        gLine(40,H-26,W-40,H-26,'rgba(255,255,255,0.1)',1,p5)
+        // 각도 호 표시
+        ctx.save();ctx.globalAlpha=p5*0.5;ctx.strokeStyle=ORG;ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,22,0,-rad,true);ctx.stroke();ctx.restore()
+        gText(`${deg}°`,cx+26,cy-10,ORG,11,p5)}
       break
     }
 
     case 'trig_special': {
-      // M055: 특수각 30°,45°,60° 비교
+      // M055: 특수각 30°,45°,60° 비교 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const angles=[{d:30,s:'1/2',c:VIO},{d:45,s:'\u221A2/2',c:GRN},{d:60,s:'\u221A3/2',c:ORG}]
-      angles.forEach((a4,i)=>{const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.5-i*0.4)));const y=34+i*60
-        gText(`${a4.d}\u00B0`,cx-80,y,a4.c,18,prog);gText(`\uC0AC\uC778 = ${a4.s}`,cx+20,y,a4.c,14,prog)
-        // 미니 삼각형
-        const rad=a4.d*Math.PI/180,rr=25,ox=W-70
-        ctx.save();ctx.globalAlpha=prog*0.6;ctx.strokeStyle=a4.c;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ox,y+10);ctx.lineTo(ox+Math.cos(rad)*rr,y+10-Math.sin(rad)*rr);ctx.lineTo(ox+Math.cos(rad)*rr,y+10);ctx.closePath();ctx.stroke();ctx.restore()
+      const rr=Math.min(70,H/2-28)
+      const specAngles=[{d:30,sin:'1/2',cos:'√3/2',tan:'1/√3',c:VIO},{d:45,sin:'√2/2',cos:'√2/2',tan:'1',c:GRN},{d:60,sin:'√3/2',cos:'1/2',tan:'√3',c:ORG}]
+      // ① 제목
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.1))
+        gText('① 특수각 표',cx,18,WHITE,13,p1)
+        gLine(M,30,W-M,30,'rgba(255,255,255,0.1)',1,p1)}
+      const rowY=[cy-52,cy,cy+52]
+      specAngles.forEach((a4,i)=>{
+        const stageP=0.12+i*0.24
+        if(p<=stageP) return
+        const prog=easeOutCubic(Math.min(1,(p-stageP)/0.2))
+        const y=rowY[i], rad=a4.d*Math.PI/180
+        const num=['②','③','④'][i]
+        // 행 배경
+        ctx.save();ctx.globalAlpha=prog*0.07;ctx.fillStyle=a4.c;ctx.fillRect(M,y-20,W-2*M,38);ctx.restore()
+        gLine(M,y-22,W-M,y-22,a4.c,1,prog*0.2)
+        // 각도
+        gText(`${num} ${a4.d}°`,W*0.13,y,a4.c,16,prog)
+        // 표 값
+        gText(`sin=${a4.sin}`,W*0.37,y,a4.c,11,prog)
+        gText(`cos=${a4.cos}`,W*0.57,y,a4.c,11,prog)
+        gText(`tan=${a4.tan}`,W*0.77,y,a4.c,11,prog)
+        // 미니 삼각형 + 원
+        const triRr=22, tx=W-40, ty=y
+        ctx.save();ctx.globalAlpha=prog*0.7;ctx.strokeStyle=a4.c;ctx.lineWidth=2;ctx.shadowBlur=6;ctx.shadowColor=a4.c
+        ctx.beginPath();ctx.moveTo(tx,ty+10);ctx.lineTo(tx+Math.cos(rad)*triRr,ty+10-Math.sin(rad)*triRr);ctx.lineTo(tx+Math.cos(rad)*triRr,ty+10);ctx.closePath();ctx.stroke();ctx.restore()
+        gCircle(tx,ty+10,3,a4.c,true,prog*0.8)
       })
+      // ⑤ 암기법
+      if(p>0.84){const p5=easeOutCubic((p-0.84)/0.16)
+        gText('⑤ 30-45-60: sin은 1→√2→√3 (÷2)',cx,H-14,WHITE,11,p5)
+        gLine(40,H-26,W-40,H-26,'rgba(255,255,255,0.1)',1,p5)}
       break
     }
 
@@ -2745,18 +4191,177 @@ switch (type) {
       break
     }
 
-    case 'solid_volume': case 'sphere_volume': case 'sphere_surface': case 'cylinder_surface': case 'cone_volume': case 'cone_surface': {
-      // M057~M061: 입체 도형 (2D 등각 투영)
+    case 'solid_volume': case 'sphere_volume': {
+      // M057: 구의 부피 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const rr=v('r',3),scS=Math.min(16,(H-60)/(rr*2+1)),rPx=rr*scS
-      // 구 시각화
-      if(p>0.1){const sp=easeOutCubic((p-0.1)/0.4)
-        ctx.save();ctx.globalAlpha=sp*0.15;ctx.fillStyle=VIO;ctx.beginPath();ctx.arc(cx,cy,rPx,0,Math.PI*2);ctx.fill();ctx.restore()
-        ctx.save();ctx.globalAlpha=sp;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=16;ctx.shadowColor=VIO;ctx.beginPath();ctx.arc(cx,cy,rPx,0,Math.PI*2);ctx.stroke()
-        ctx.globalAlpha=sp*0.3;ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(cx,cy,rPx,rPx*0.28,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
-      if(p>0.4){const rp=easeOutCubic((p-0.4)/0.3);gLine(cx,cy,cx+rPx,cy,ORG,2.5,rp);gText(`r=${rr}`,cx+rPx/2,cy-14,ORG,13,rp)}
-      if(p>0.7){const vp=easeOutCubic((p-0.7)/0.3);const vol=r((4/3)*Math.PI*rr*rr*rr);const surf=r(4*Math.PI*rr*rr)
-        gText(`V = 4/3\u03C0r\u00B3 = ${vol}`,cx,H-32,VIO,13,vp);gText(`S = 4\u03C0r\u00B2 = ${surf}`,cx,H-14,GRN,13,vp)}
+      const rr=v('r',3),scS=Math.min(18,(H-80)/(rr*2+1)),rPx=Math.max(20,rr*scS)
+      const vol=r((4/3)*Math.PI*rr*rr*rr)
+      // ① 구 윤곽
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.14))
+        ctx.save();ctx.globalAlpha=p1*0.1;ctx.fillStyle=VIO;ctx.beginPath();ctx.arc(cx,cy,rPx,0,Math.PI*2);ctx.fill();ctx.restore()
+        ctx.save();ctx.globalAlpha=p1;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=16;ctx.shadowColor=VIO;ctx.beginPath();ctx.arc(cx,cy,rPx,0,Math.PI*2);ctx.stroke();ctx.restore()
+        gText('① 구',cx,cy-rPx-14,VIO,12,p1)}
+      // ② 적도 타원
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.18)
+        ctx.save();ctx.globalAlpha=p2*0.4;ctx.strokeStyle=GRN;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(cx,cy,rPx,rPx*0.28,0,0,Math.PI*2);ctx.stroke();ctx.restore()
+        gText('② 적도선',cx+rPx+12,cy,GRN,11,p2)}
+      // ③ 반지름
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.18)
+        gLine(cx,cy,cx+rPx,cy,ORG,2.5,p3)
+        gCircle(cx,cy,4,ORG,true,p3)
+        gText(`③ r = ${rr}`,cx+rPx/2,cy-16,ORG,13,p3)}
+      // ④ 공식
+      if(p>0.58){const p4=easeOutCubic((p-0.58)/0.2)
+        gText('④ V = 4/3 × π × r³',cx,H-30,VIO,14,p4)
+        gLine(cx-90,H-20,cx+90,H-20,VIO,1,p4*0.4)}
+      // ⑤ 계산값
+      if(p>0.78){const p5=easeOutCubic((p-0.78)/0.2)
+        gText(`⑤ V = ${vol}`,cx,H-14,GRN,15,p5)
+        gCircle(cx,cy,rPx+10,ORG,false,p5*0.25)}
+      break
+    }
+
+    case 'sphere_surface': {
+      // M058: 구의 겉넓이 — A급 5단계
+      const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
+      const rr=v('r',3),scS=Math.min(18,(H-80)/(rr*2+1)),rPx=Math.max(20,rr*scS)
+      const surf=r(4*Math.PI*rr*rr)
+      // ① 구
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.14))
+        ctx.save();ctx.globalAlpha=p1*0.12;ctx.fillStyle=VIO;ctx.beginPath();ctx.arc(cx,cy,rPx,0,Math.PI*2);ctx.fill();ctx.restore()
+        ctx.save();ctx.globalAlpha=p1;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=16;ctx.shadowColor=VIO;ctx.beginPath();ctx.arc(cx,cy,rPx,0,Math.PI*2);ctx.stroke();ctx.restore()
+        gText('① 구 겉넓이',cx,cy-rPx-14,VIO,12,p1)}
+      // ② 경선 그리기
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.18)
+        for(let i=0;i<3;i++){const ang=i*Math.PI/3
+          ctx.save();ctx.globalAlpha=p2*0.25;ctx.strokeStyle=GRN;ctx.lineWidth=1.2
+          ctx.beginPath();ctx.ellipse(cx,cy,rPx*Math.cos(ang),rPx,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
+        gText('② 구 표면',cx+rPx+10,cy,GRN,11,p2)}
+      // ③ 반지름
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.18)
+        gLine(cx,cy,cx+rPx,cy,ORG,2.5,p3)
+        gCircle(cx,cy,4,ORG,true,p3)
+        gText(`③ r = ${rr}`,cx+rPx/2,cy-16,ORG,13,p3)}
+      // ④ 공식
+      if(p>0.58){const p4=easeOutCubic((p-0.58)/0.2)
+        gText('④ S = 4 × π × r²',cx,H-30,VIO,14,p4)
+        gLine(cx-85,H-20,cx+85,H-20,VIO,1,p4*0.4)}
+      // ⑤ 계산값
+      if(p>0.78){const p5=easeOutCubic((p-0.78)/0.2)
+        gText(`⑤ S = ${surf}`,cx,H-14,GRN,15,p5)
+        gCircle(cx,cy,rPx+10,ORG,false,p5*0.25)}
+      break
+    }
+
+    case 'cylinder_surface': {
+      // M059: 원기둥 겉넓이 — A급 5단계
+      const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
+      const rr=v('r',3),hh=v('h',5)
+      const scS=Math.min(16,(H-80)/((hh+rr*2)*1.2)),rPx=Math.max(16,rr*scS),hPx=Math.max(30,hh*scS)
+      const surf=r(2*Math.PI*rr*rr + 2*Math.PI*rr*hh)
+      // ① 기둥 옆면
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.14))
+        ctx.save();ctx.globalAlpha=p1*0.1;ctx.fillStyle=VIO
+        ctx.fillRect(cx-rPx,cy-hPx/2,rPx*2,hPx);ctx.restore()
+        ctx.save();ctx.globalAlpha=p1;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=12;ctx.shadowColor=VIO
+        ctx.strokeRect(cx-rPx,cy-hPx/2,rPx*2,hPx);ctx.restore()
+        gText('① 원기둥',cx,cy-hPx/2-14,VIO,12,p1)}
+      // ② 위아래 타원
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.18)
+        ctx.save();ctx.globalAlpha=p2*0.3;ctx.fillStyle=GRN;ctx.beginPath();ctx.ellipse(cx,cy-hPx/2,rPx,rPx*0.3,0,0,Math.PI*2);ctx.fill();ctx.restore()
+        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(cx,cy-hPx/2,rPx,rPx*0.3,0,0,Math.PI*2);ctx.stroke();ctx.restore()
+        ctx.save();ctx.globalAlpha=p2*0.3;ctx.fillStyle=GRN;ctx.beginPath();ctx.ellipse(cx,cy+hPx/2,rPx,rPx*0.3,0,0,Math.PI*2);ctx.fill();ctx.restore()
+        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(cx,cy+hPx/2,rPx,rPx*0.3,0,0,Math.PI*2);ctx.stroke();ctx.restore()
+        gText('② 원 2개',cx+rPx+12,cy-hPx/2,GRN,11,p2)}
+      // ③ 반지름+높이
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.18)
+        gLine(cx,cy-hPx/2,cx+rPx,cy-hPx/2,ORG,2,p3)
+        gText(`③ r=${rr}`,cx+rPx/2,cy-hPx/2-14,ORG,11,p3)
+        gLine(cx+rPx+10,cy-hPx/2,cx+rPx+10,cy+hPx/2,ORG,2,p3)
+        gText(`h=${hh}`,cx+rPx+24,cy,ORG,11,p3)
+        gCircle(cx,cy-hPx/2,4,ORG,true,p3)
+        gCircle(cx,cy+hPx/2,4,ORG,true,p3)}
+      // ④ 공식
+      if(p>0.58){const p4=easeOutCubic((p-0.58)/0.2)
+        gText('④ S = 2πr² + 2πrh',cx,H-30,VIO,13,p4)
+        gLine(cx-95,H-20,cx+95,H-20,VIO,1,p4*0.4)}
+      // ⑤ 계산
+      if(p>0.78){const p5=easeOutCubic((p-0.78)/0.2)
+        gText(`⑤ S = ${surf}`,cx,H-14,GRN,15,p5)}
+      break
+    }
+
+    case 'cone_volume': {
+      // M060: 원뿔 부피 — A급 5단계
+      const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
+      const rr=v('r',3),hh=v('h',4)
+      const scS=Math.min(18,(H-80)/((hh+rr)*1.4)),rPx=Math.max(18,rr*scS),hPx=Math.max(28,hh*scS)
+      const vol=r((1/3)*Math.PI*rr*rr*hh)
+      const apex={x:cx,y:cy-hPx/2}, bL={x:cx-rPx,y:cy+hPx/2}, bR={x:cx+rPx,y:cy+hPx/2}
+      // ① 원뿔
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.14))
+        ctx.save();ctx.globalAlpha=p1*0.1;ctx.fillStyle=VIO
+        ctx.beginPath();ctx.moveTo(apex.x,apex.y);ctx.lineTo(bL.x,bL.y);ctx.lineTo(bR.x,bR.y);ctx.closePath();ctx.fill();ctx.restore()
+        ctx.save();ctx.globalAlpha=p1;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=12;ctx.shadowColor=VIO
+        ctx.beginPath();ctx.moveTo(apex.x,apex.y);ctx.lineTo(bL.x,bL.y);ctx.lineTo(bR.x,bR.y);ctx.stroke();ctx.restore()
+        ctx.save();ctx.globalAlpha=p1*0.25;ctx.strokeStyle=VIO;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(cx,bL.y,rPx,rPx*0.28,0,0,Math.PI*2);ctx.stroke();ctx.restore()
+        gText('① 원뿔',cx,apex.y-14,VIO,12,p1)}
+      // ② 밑면 원
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.18)
+        ctx.save();ctx.globalAlpha=p2*0.3;ctx.fillStyle=GRN;ctx.beginPath();ctx.ellipse(cx,bL.y,rPx,rPx*0.28,0,0,Math.PI*2);ctx.fill();ctx.restore()
+        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(cx,bL.y,rPx,rPx*0.28,0,0,Math.PI*2);ctx.stroke();ctx.restore()
+        gText('② 밑면',cx+rPx+12,bL.y,GRN,11,p2)}
+      // ③ 반지름+높이
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.18)
+        gLine(cx,bL.y,cx+rPx,bL.y,ORG,2,p3)
+        gText(`③ r=${rr}`,cx+rPx/2,bL.y+16,ORG,11,p3)
+        gLine(cx,apex.y,cx,bL.y,ORG,2,p3*0.5)
+        gText(`h=${hh}`,cx+10,cy,ORG,11,p3)
+        gCircle(apex.x,apex.y,4,ORG,true,p3)}
+      // ④ 공식
+      if(p>0.58){const p4=easeOutCubic((p-0.58)/0.2)
+        gText('④ V = 1/3 × π × r² × h',cx,H-30,VIO,13,p4)
+        gLine(cx-105,H-20,cx+105,H-20,VIO,1,p4*0.4)}
+      // ⑤ 계산
+      if(p>0.78){const p5=easeOutCubic((p-0.78)/0.2)
+        gText(`⑤ V = ${vol}`,cx,H-14,GRN,15,p5)}
+      break
+    }
+
+    case 'cone_surface': {
+      // M061: 원뿔 겉넓이 — A급 5단계
+      const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
+      const rr=v('r',3),hh=v('h',4)
+      const ll=r(Math.sqrt(rr*rr+hh*hh))
+      const scS=Math.min(18,(H-80)/((hh+rr)*1.4)),rPx=Math.max(18,rr*scS),hPx=Math.max(28,hh*scS)
+      const surf=r(Math.PI*rr*rr + Math.PI*rr*ll)
+      const apex={x:cx,y:cy-hPx/2}, bL={x:cx-rPx,y:cy+hPx/2}, bR={x:cx+rPx,y:cy+hPx/2}
+      // ① 원뿔
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.14))
+        ctx.save();ctx.globalAlpha=p1*0.1;ctx.fillStyle=VIO
+        ctx.beginPath();ctx.moveTo(apex.x,apex.y);ctx.lineTo(bL.x,bL.y);ctx.lineTo(bR.x,bR.y);ctx.closePath();ctx.fill();ctx.restore()
+        ctx.save();ctx.globalAlpha=p1;ctx.strokeStyle=VIO;ctx.lineWidth=2.5;ctx.shadowBlur=12;ctx.shadowColor=VIO
+        ctx.beginPath();ctx.moveTo(apex.x,apex.y);ctx.lineTo(bL.x,bL.y);ctx.lineTo(bR.x,bR.y);ctx.stroke();ctx.restore()
+        gText('① 원뿔',cx,apex.y-14,VIO,12,p1)}
+      // ② 밑면
+      if(p>0.18){const p2=easeOutCubic((p-0.18)/0.18)
+        ctx.save();ctx.globalAlpha=p2*0.3;ctx.fillStyle=GRN;ctx.beginPath();ctx.ellipse(cx,bL.y,rPx,rPx*0.28,0,0,Math.PI*2);ctx.fill();ctx.restore()
+        ctx.save();ctx.globalAlpha=p2;ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(cx,bL.y,rPx,rPx*0.28,0,0,Math.PI*2);ctx.stroke();ctx.restore()
+        gText('② 밑면 원',cx+rPx+12,bL.y,GRN,11,p2)}
+      // ③ 모선 강조
+      if(p>0.38){const p3=easeOutCubic((p-0.38)/0.18)
+        gLine(apex.x,apex.y,bR.x,bR.y,ORG,3,p3)
+        gText(`③ 모선 l=${ll}`,cx+rPx/2+10,cy,ORG,12,p3)
+        gCircle(apex.x,apex.y,5,ORG,true,p3)
+        gLine(cx,bL.y,cx+rPx,bL.y,ORG,2,p3*0.6)
+        gText(`r=${rr}`,cx+rPx/2,bL.y+16,ORG,11,p3)}
+      // ④ 공식
+      if(p>0.58){const p4=easeOutCubic((p-0.58)/0.2)
+        gText('④ S = πr² + πrl',cx,H-30,VIO,14,p4)
+        gLine(cx-80,H-20,cx+80,H-20,VIO,1,p4*0.4)}
+      // ⑤ 계산
+      if(p>0.78){const p5=easeOutCubic((p-0.78)/0.2)
+        gText(`⑤ S = ${surf}`,cx,H-14,GRN,15,p5)}
       break
     }
 
@@ -2820,38 +4425,132 @@ switch (type) {
     }
 
     case 'square_diagonal': case 'rect_diagonal': {
-      // M069~M070: 대각선 길이
+      // M069~M070: 대각선 길이 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
       const a4=v('a',4),b4=v('b',3),d=r(Math.sqrt(a4*a4+b4*b4))
-      const sc=Math.min(20,Math.min((W-60)/a4,(H-60)/b4)),ox=cx-a4*sc/2,oy=cy-b4*sc/2
-      ctx.save();ctx.globalAlpha=p*0.8;ctx.strokeStyle=WHITE;ctx.lineWidth=2;ctx.strokeRect(ox,oy,a4*sc,b4*sc);ctx.restore()
-      gText(String(a4),cx,oy+b4*sc+14,'rgba(255,255,255,0.5)',12,p);gText(String(b4),ox-14,cy,'rgba(255,255,255,0.5)',12,p)
-      if(p>0.35){const dp=easeOutCubic((p-0.35)/0.3);gLine(ox,oy,ox+a4*sc,oy+b4*sc,ORG,3,dp);gText(`d=${d}`,cx+10,cy-10,ORG,15,dp)}
-      if(p>0.7) gText(`d\u00B2 = ${a4}\u00B2+${b4}\u00B2 = ${a4*a4+b4*b4}`,cx,H-16,GRN,13,easeOutCubic((p-0.7)/0.3))
+      const sdSc=Math.min(20,Math.min((W-60)/a4,(H-60)/b4)),sdOx=cx-a4*sdSc/2,sdOy=cy-b4*sdSc/2
+      // ① 직사각형
+      if(p>0.02){const t=easeOutCubic(Math.min(1,(p-0.02)/0.18))
+        gText('① 직사각형 그리기',cx,22,VIO,14,t)
+        gLine(sdOx,sdOy,sdOx+a4*sdSc,sdOy,VIO,2.5,t)
+        gLine(sdOx+a4*sdSc,sdOy,sdOx+a4*sdSc,sdOy+b4*sdSc,VIO,2.5,t)
+        gLine(sdOx+a4*sdSc,sdOy+b4*sdSc,sdOx,sdOy+b4*sdSc,VIO,2.5,t)
+        gLine(sdOx,sdOy+b4*sdSc,sdOx,sdOy,VIO,2.5,t)
+        gCircle(sdOx,sdOy,4,VIO,true,t);gCircle(sdOx+a4*sdSc,sdOy,4,VIO,true,t)
+        gCircle(sdOx,sdOy+b4*sdSc,4,VIO,true,t);gCircle(sdOx+a4*sdSc,sdOy+b4*sdSc,4,VIO,true,t)
+      }
+      // ② 변 길이 표시
+      if(p>0.22){const t=easeOutCubic(Math.min(1,(p-0.22)/0.18))
+        gText('② 변 길이',cx,22,GRN,14,t)
+        gText(`가로 = ${r(a4)}`,cx,sdOy+b4*sdSc+18,GRN,13,t)
+        gText(`세로 = ${r(b4)}`,sdOx-24,cy,GRN,13,t)
+      }
+      // ③ 대각선
+      if(p>0.42){const t=easeOutCubic(Math.min(1,(p-0.42)/0.18))
+        gText('③ 대각선 그리기',cx,22,ORG,14,t)
+        gLine(sdOx,sdOy,sdOx+a4*sdSc,sdOy+b4*sdSc,ORG,3,t)
+        gCircle(cx,cy,5,ORG,true,t)
+        gText(`d = ${d}`,cx+20,cy-14,ORG,16,t)
+      }
+      // ④ 피타고라스
+      if(p>0.62){const t=easeOutCubic(Math.min(1,(p-0.62)/0.18))
+        gText('④ 피타고라스 정리',cx,22,MINT,14,t)
+        gText(`d² = ${r(a4)}² + ${r(b4)}² = ${a4*a4} + ${b4*b4} = ${a4*a4+b4*b4}`,cx,sdOy+b4*sdSc+40,ORG,13,t)
+      }
+      // ⑤ 결론
+      if(p>0.82){const t=easeOutCubic(Math.min(1,(p-0.82)/0.15))
+        gText('⑤ 대각선 = 루트(가로²+세로²)',cx,22,MINT,14,t)
+        gText(`d = 루트(${a4*a4+b4*b4}) = ${d}`,cx,H-20,MINT,16,t)
+      }
       break
     }
 
     case 'histogram_viz': {
-      // M047: 도수분포표 — 막대 솟아오름
+      // M047: 도수분포표 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const data=[v('d0',3),v('d1',7),v('d2',12),v('d3',8),v('d4',5)],maxV=v('maxV',12),barW=Math.min(40,(W-60)/data.length-8),maxBH=H-70,ox=cx-(data.length*(barW+10))/2,baseY=cy+maxBH/2
+      const data=[v('d0',3),v('d1',7),v('d2',12),v('d3',8),v('d4',5)]
+      const maxV=Math.max(...data),total3=data.reduce((a,b)=>a+b,0)
+      const barW=Math.min(44,(W-80)/data.length-10),maxBH=H-90
+      const ox=cx-(data.length*(barW+10))/2,baseY=H-42
       const labels=['140~','150~','160~','170~','180~']
-      data.forEach((d2,i)=>{const bh=(d2/maxV)*maxBH;const x=ox+i*(barW+10);const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.5-i*0.2)));const color=[VIO,GRN,ORG,VIO,GRN][i]
-        ctx.save();ctx.globalAlpha=prog*0.6;ctx.fillStyle=color+'66';ctx.strokeStyle=color;ctx.lineWidth=2;ctx.fillRect(x,baseY-bh*prog,barW,bh*prog);ctx.strokeRect(x,baseY-bh*prog,barW,bh*prog);ctx.restore()
-        gText(String(d2),x+barW/2,baseY-bh-10,color,11,prog);gText(labels[i],x+barW/2,baseY+14,'rgba(255,255,255,0.4)',8,prog)})
-      gText('(cm)',ox+data.length*(barW+10)+10,baseY+14,'rgba(255,255,255,0.3)',9,p)
+      const colors=[VIO,GRN,ORG,VIO,GRN]
+      // ① 제목+축
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.1))
+        gText('① 히스토그램 (도수분포)',cx,18,WHITE,13,p1)
+        gLine(ox-10,baseY,ox+data.length*(barW+10)+10,baseY,'rgba(255,255,255,0.25)',1.5,p1)
+        gLine(ox-10,baseY-maxBH-10,ox-10,baseY,'rgba(255,255,255,0.25)',1.5,p1)}
+      // ② 막대 솟아오름
+      if(p>0.12){data.forEach((d2,i)=>{const bh=(d2/maxV)*maxBH;const x=ox+i*(barW+10)
+        const stageP=Math.min(1,Math.max(0,(p-0.12-i*0.08)/0.22))
+        if(stageP<=0) return
+        const prog=easeOutCubic(stageP)
+        ctx.save();ctx.globalAlpha=prog*0.55;ctx.fillStyle=colors[i]+'66';ctx.strokeStyle=colors[i];ctx.lineWidth=2
+        ctx.shadowBlur=8;ctx.shadowColor=colors[i]
+        ctx.fillRect(x,baseY-bh*prog,barW,bh*prog);ctx.strokeRect(x,baseY-bh*prog,barW,bh*prog);ctx.restore()
+        gText(String(d2),x+barW/2,baseY-bh*prog-12,colors[i],11,prog)
+        gText(labels[i],x+barW/2,baseY+14,'rgba(255,255,255,0.45)',8,prog)})}
+      // ③ 가장 큰 막대 강조
+      if(p>0.6){const p3=easeOutCubic((p-0.6)/0.15)
+        const mi=data.indexOf(maxV);const x=ox+mi*(barW+10)
+        ctx.save();ctx.globalAlpha=p3*0.2;ctx.fillStyle=ORG
+        ctx.fillRect(x,baseY-maxBH,barW,maxBH);ctx.restore()
+        gCircle(x+barW/2,baseY-maxBH-10,5,ORG,true,p3)
+        gText('③ 최빈 계급',x+barW/2,baseY-maxBH-26,ORG,11,p3)}
+      // ④ 단위
+      if(p>0.75){const p4=easeOutCubic((p-0.75)/0.15)
+        gText('④ 단위: cm / 도수: 명',ox+data.length*(barW+10)*0.5,baseY+28,'rgba(255,255,255,0.5)',10,p4)}
+      // ⑤ 합계
+      if(p>0.88){const p5=easeOutCubic((p-0.88)/0.12)
+        gText(`⑤ 총 도수: ${total3}명`,cx,H-14,WHITE,12,p5)
+        gLine(ox-10,H-26,ox+data.length*(barW+10)+10,H-26,'rgba(255,255,255,0.1)',1,p5)}
       break
     }
 
     case 'relative_freq': {
-      // M053: 상대도수 — 비율 변환
-      const VIO='#534AB7',GRN='#1D9E75'
-      const data=[v('d0',3),v('d1',7),v('d2',12),v('d3',8),v('d4',5)],total=v('total',35)
-      const barW=Math.min(40,(W-60)/data.length-8),maxBH=H-70,ox=cx-(data.length*(barW+10))/2,baseY=cy+maxBH/2
-      data.forEach((d2,i)=>{const bh=((d2/total))*maxBH*2;const x=ox+i*(barW+10);const prog=easeOutCubic(Math.min(1,Math.max(0,p*2.5-i*0.2)));const color=[VIO,GRN,'#D85A30',VIO,GRN][i]
-        ctx.save();ctx.globalAlpha=prog*0.6;ctx.fillStyle=color+'66';ctx.strokeStyle=color;ctx.lineWidth=2;ctx.fillRect(x,baseY-bh*prog,barW,bh*prog);ctx.strokeRect(x,baseY-bh*prog,barW,bh*prog);ctx.restore()
-        gText(String(r(d2/total)),x+barW/2,baseY-bh-10,color,10,prog)})
-      if(p>0.8) gText('\uC0C1\uB300\uB3C4\uC218 = \uB3C4\uC218/\uCD1D\uB3C4\uC218',cx,H-16,GRN,13,easeOutCubic((p-0.8)/0.2))
+      // M053: 상대도수 — A급 5단계
+      const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
+      const data=[v('d0',3),v('d1',7),v('d2',12),v('d3',8),v('d4',5)]
+      const total3=data.reduce((a,b)=>a+b,0)
+      const barW=Math.min(42,(W-80)/data.length-10),maxBH=H-92
+      const ox=cx-(data.length*(barW+10))/2,baseY=H-44
+      const colors=[VIO,GRN,ORG,VIO,GRN]
+      const labels=['A','B','C','D','E']
+      // ① 제목+축
+      if(p>0.0){const p1=easeOutCubic(Math.min(1,p/0.1))
+        gText('① 상대도수 = 도수÷전체',cx,18,WHITE,13,p1)
+        gLine(ox-10,baseY,ox+data.length*(barW+10)+10,baseY,'rgba(255,255,255,0.25)',1.5,p1)
+        gLine(ox-10,baseY-maxBH-10,ox-10,baseY,'rgba(255,255,255,0.25)',1.5,p1)
+        gText('1.0',ox-30,baseY-maxBH,'rgba(255,255,255,0.3)',9,p1)
+        gText('0',ox-14,baseY,'rgba(255,255,255,0.3)',9,p1)}
+      // ② 도수 막대
+      if(p>0.12){data.forEach((d2,i)=>{
+        const freqH=(d2/Math.max(...data))*maxBH
+        const x=ox+i*(barW+10)
+        const sp=Math.max(0,(p-0.12-i*0.05)/0.18)
+        if(sp<=0) return
+        const prog=easeOutCubic(Math.min(1,sp))
+        ctx.save();ctx.globalAlpha=prog*0.3;ctx.fillStyle=colors[i];ctx.fillRect(x,baseY-freqH*prog,barW,freqH*prog);ctx.restore()
+        ctx.save();ctx.globalAlpha=prog*0.5;ctx.strokeStyle=colors[i];ctx.lineWidth=1.5;ctx.strokeRect(x,baseY-freqH*prog,barW,freqH*prog);ctx.restore()
+        gText(String(d2),x+barW/2,baseY-freqH*prog-12,colors[i],10,prog)
+        gText(labels[i],x+barW/2,baseY+13,'rgba(255,255,255,0.45)',9,prog)})}
+      // ③ 상대도수 막대 (겹쳐서)
+      if(p>0.48){data.forEach((d2,i)=>{
+        const relH=(d2/total3)*maxBH
+        const x=ox+i*(barW+10)
+        const sp=Math.max(0,(p-0.48-i*0.04)/0.18)
+        if(sp<=0) return
+        const prog=easeOutCubic(Math.min(1,sp))
+        ctx.save();ctx.globalAlpha=prog*0.7;ctx.fillStyle=colors[i]+'55';ctx.strokeStyle=colors[i];ctx.lineWidth=2.5;ctx.shadowBlur=8;ctx.shadowColor=colors[i]
+        ctx.fillRect(x,baseY-relH*prog,barW,relH*prog);ctx.strokeRect(x,baseY-relH*prog,barW,relH*prog);ctx.restore()
+        gText(r(d2/total3,2).toFixed(2),x+barW/2,baseY-relH*prog-12,colors[i],10,prog)})}
+      // ④ 합계 = 1.0 선
+      if(p>0.72){const p4=easeOutCubic((p-0.72)/0.14)
+        gLine(ox-8,baseY-maxBH,ox+data.length*(barW+10)+8,baseY-maxBH,ORG,1.5,p4*0.5)
+        gText(`④ 전체 합 = ${total3}명 → 상대도수 합 = 1.0`,cx,baseY-maxBH-14,ORG,10,p4)}
+      // ⑤ 결론
+      if(p>0.88){const p5=easeOutCubic((p-0.88)/0.12)
+        gText('⑤ 상대도수로 비교 가능 (전체가 달라도)',cx,H-14,WHITE,11,p5)
+        gLine(40,H-26,W-40,H-26,'rgba(255,255,255,0.1)',1,p5)}
       break
     }
 
@@ -2944,21 +4643,44 @@ switch (type) {
     }
 
     case 'correlation_viz': {
-      // M074: 산점도와 상관관계 — 점 찍기
+      // M074: 산점도와 상관관계 — A급 5단계
       const VIO='#534AB7',GRN='#1D9E75',ORG='#D85A30'
-      const sc=20;gLine(40,cy+60,W-40,cy+60,'rgba(255,255,255,0.15)',1.5,p);gLine(50,20,50,H-20,'rgba(255,255,255,0.15)',1.5,p)
-      gText('\uD0A4(cm)',W-30,cy+60-10,'rgba(255,255,255,0.3)',9,p);gText('\uBC1C(\uCE58\uC218)',50+10,24,'rgba(255,255,255,0.3)',9,p)
-      // 양의 상관 점들
-      const pts: [number,number][] = [[2,1],[3,2],[4,2.5],[5,3],[6,4],[7,4.5],[8,5],[9,5.5]]
-      pts.forEach(([x2,y2],i)=>{
-        const prog=easeOutElastic(Math.min(1,Math.max(0,p*2-i*0.1)))
-        gCircle(50+x2*sc,cy+60-y2*sc,5,VIO,true,prog*0.7)
-      })
-      // 추세선
-      if(p>0.6){const lp=easeOutCubic((p-0.6)/0.3)
-        ctx.save();ctx.globalAlpha=lp*0.6;ctx.strokeStyle=GRN;ctx.lineWidth=2;ctx.shadowBlur=8;ctx.shadowColor=GRN;ctx.setLineDash([4,4])
-        ctx.beginPath();ctx.moveTo(50+1*sc,cy+60-0.5*sc);ctx.lineTo(50+10*sc,cy+60-6*sc);ctx.stroke();ctx.restore()
-        gText('\uC591\uC758 \uC0C1\uAD00\uAD00\uACC4',cx+40,40,GRN,13,lp)}
+      const crSc=20,crBaseY=cy+60,crOx=50
+      const crPts: [number,number][] = [[2,1],[3,2],[4,2.5],[5,3],[6,4],[7,4.5],[8,5],[9,5.5]]
+      // ① 좌표축
+      if(p>0.02){const t=easeOutCubic(Math.min(1,(p-0.02)/0.16))
+        gText('① 좌표축',cx,22,WHITE,14,t)
+        gLine(crOx,crBaseY,W-30,crBaseY,'rgba(255,255,255,0.2)',1.5,t)
+        gLine(crOx,20,crOx,H-20,'rgba(255,255,255,0.2)',1.5,t)
+        gText('x',W-25,crBaseY-10,'#666',11,t); gText('y',crOx+12,26,'#666',11,t)
+        gCircle(crOx,crBaseY,3,WHITE,true,t)
+      }
+      // ② 점 찍기
+      if(p>0.2){const t=easeOutCubic(Math.min(1,(p-0.2)/0.2))
+        gText('② 데이터 점 찍기',cx,22,VIO,14,t)
+        crPts.forEach(([x2,y2],i)=>{
+          const prog=easeOutCubic(Math.min(1,Math.max(0,t*2-i*0.15)))
+          gCircle(crOx+x2*crSc,crBaseY-y2*crSc,5,VIO,true,prog*0.8)
+        })
+      }
+      // ③ 추세선
+      if(p>0.45){const t=easeOutCubic(Math.min(1,(p-0.45)/0.18))
+        gText('③ 추세선 그리기',cx,22,GRN,14,t)
+        gLine(crOx+1*crSc,crBaseY-0.5*crSc,crOx+10*crSc,crBaseY-6*crSc,GRN,2.5,t)
+        gCircle(crOx+1*crSc,crBaseY-0.5*crSc,4,GRN,true,t)
+        gCircle(crOx+10*crSc,crBaseY-6*crSc,4,GRN,true,t)
+      }
+      // ④ 상관 판정
+      if(p>0.65){const t=easeOutCubic(Math.min(1,(p-0.65)/0.15))
+        gText('④ 양의 상관관계',cx,22,ORG,14,t)
+        gText('점들이 오른쪽 위로 모인다',cx+60,crBaseY-3*crSc,ORG,13,t)
+        gLine(cx+30,crBaseY-3*crSc+8,cx+30,crBaseY-3*crSc-8,ORG,2,t)
+      }
+      // ⑤ 결론
+      if(p>0.82){const t=easeOutCubic(Math.min(1,(p-0.82)/0.15))
+        gText('⑤ x가 커지면 y도 커진다',cx,22,MINT,14,t)
+        gText('양의 상관관계',cx,H-20,MINT,16,t)
+      }
       break
     }
 

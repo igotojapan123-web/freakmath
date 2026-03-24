@@ -26,6 +26,46 @@ const R3F_VISUAL_TYPES = new Set([
   'pythagoras_viz',
 ]);
 
+// 초등 visualType → ID 매핑
+const ELEM_TYPES = {
+  'addition':'E001','subtraction':'E002','add_sub_relation':'E003','times_table':'E004',
+  'multiply_long':'E005','division':'E006','mul_div_relation':'E007','rounding':'E008',
+  'fraction_intro':'E009','decimal_intro':'E010','fraction_add_same':'E011','decimal_add_sub':'E012',
+  'mixed_calc':'E013','number_range':'E014','gcd':'E015','lcm':'E016',
+  'simplify_fraction':'E017','fraction_add_diff':'E018','fraction_multiply':'E019','fraction_divide':'E020',
+  'decimal_multiply':'E021','decimal_divide':'E022','correspondence':'E023','ratio':'E024',
+  'percentage':'E025','proportion':'E026','proportion_split':'E027','angle':'E028',
+  'triangle_angles':'E029','quad_angles':'E030','perimeter_rect':'E031','area_rect':'E032',
+  'area_square':'E033','area_parallelogram':'E034','area_triangle':'E035','area_trapezoid':'E036',
+  'area_rhombus':'E037','pi_ratio':'E038','circumference':'E039','circle_area':'E040',
+  'surface_cuboid':'E041','volume_cuboid':'E042','average':'E043','unit_area':'E044',
+  'unit_volume':'E045','unit_length':'E046','unit_liquid':'E047','unit_weight':'E048',
+  'possibility':'E049','time_clock':'E050',
+};
+
+// 중등 visualType → ID 매핑
+const MID_TYPES = {
+  'integer_calc':'M001','integer_calc_sub':'M002','integer_calc_mul':'M003','absolute_value':'M004',
+  'integer_calc_rational':'M005','recurring_decimal':'M006','exponent_viz':'M007','exponent_div':'M008',
+  'exponent_power':'M009','prime_factorization':'M010','square_root_viz':'M011','square_root_property':'M012',
+  'square_root_add':'M013','rationalize':'M014','polynomial_mul':'M015','linear_expr':'M016',
+  'linear_eq_viz':'M017','binomial_sq_plus':'M018','binomial_sq_minus':'M019','diff_of_squares':'M020',
+  'binomial_product':'M021','factorization_common':'M022','factorization_perfect':'M023','factorization_diff':'M024',
+  'simultaneous_eq':'M025','simultaneous_sub':'M026','quadratic_eq_factor':'M027','quadratic_formula_viz':'M028',
+  'set_operation':'M029','inequality_viz':'M030','linear_func':'M031','slope_viz':'M032',
+  'intercept_viz':'M033','linear_eq_apply':'M034','parabola_basic':'M035','parabola_standard':'M036',
+  'parabola_vertex':'M037','parabola_minmax':'M038','inverse_proportion':'M039','proportional_judge':'M040',
+  'simul_eq_apply':'M041','triangle_congruent':'M042','isosceles_viz':'M043','parallelogram_viz':'M044',
+  'pythagoras_viz':'M045','pythagorean_triple':'M046','histogram_viz':'M047','similarity_area':'M048',
+  'similarity_volume':'M049','parallel_ratio_viz':'M050','inscribed_angle':'M051','tangent_length':'M052',
+  'relative_freq':'M053','trig_ratio':'M054','trig_special':'M055','trig_apply':'M056',
+  'sphere_volume':'M057','sphere_surface':'M058','cylinder_surface':'M059','cone_volume':'M060',
+  'cone_surface':'M061','representative_value':'M062','parallel_angles':'M063','exterior_angle':'M064',
+  'polygon_angle_sum':'M065','polygon_exterior_sum':'M066','arc_length':'M067','sector_area':'M068',
+  'square_diagonal':'M069','rect_diagonal':'M070','counting_add':'M071','counting_mul':'M072',
+  'std_deviation':'M073','correlation_viz':'M074','probability_basic':'M075','complement_prob':'M076',
+};
+
 // 고등 visualType → ID 매핑
 const HIGH_TYPES = {
   'poly_add': 'H001', 'poly_mul_h': 'H002', 'expand_formula': 'H003', 'factor_h': 'H004',
@@ -51,6 +91,9 @@ const HIGH_TYPES = {
   'transformation': 'H068', 'space_vector': 'H070', 'exponent_viz': 'H071',
   'coordinate_plane': 'H073', 'diff_rules': 'H075',
 };
+
+// 전체 매핑
+const ALL_TYPES = { ...ELEM_TYPES, ...MID_TYPES, ...HIGH_TYPES };
 
 function extractCaseBlocks(source) {
   const blocks = {};
@@ -160,7 +203,7 @@ function analyzeBlock(type, block) {
 
   return {
     type,
-    id: HIGH_TYPES[type] || '?',
+    id: ALL_TYPES[type] || '?',
     grade,
     lineCount,
     pBranches,
@@ -185,10 +228,10 @@ function run() {
   const source = fs.readFileSync(SRC_PATH, 'utf-8');
   const blocks = extractCaseBlocks(source);
 
-  // 고등 65개만 필터 (R3F 제외)
-  const targetTypes = Object.keys(HIGH_TYPES).filter(t => !R3F_VISUAL_TYPES.has(t));
+  // 전체: 초등50 + 중등76 + 고등65 (R3F 제외)
+  const targetTypes = Object.keys(ALL_TYPES).filter(t => !R3F_VISUAL_TYPES.has(t));
 
-  console.log(`📋 고등 ${targetTypes.length}개 Canvas 2D 케이스 분석\n`);
+  console.log(`📋 전체 ${targetTypes.length}개 Canvas 2D 케이스 분석 (초등${Object.keys(ELEM_TYPES).length} + 중등${Object.keys(MID_TYPES).length} + 고등)\n`);
 
   const results = [];
   const grades = { A: 0, B: 0, C: 0, F: 0 };
@@ -196,9 +239,9 @@ function run() {
   for (const type of targetTypes) {
     const block = blocks[type];
     if (!block) {
-      console.log(`❓ ${HIGH_TYPES[type]} ${type}: 케이스 없음 (fallback)`);
+      console.log(`❓ ${ALL_TYPES[type]} ${type}: 케이스 없음 (fallback)`);
       results.push({
-        type, id: HIGH_TYPES[type], grade: 'F',
+        type, id: ALL_TYPES[type], grade: 'F',
         lineCount: 0, issues: ['독립 케이스 없음 (fallback 그룹)'],
       });
       grades.F++;
