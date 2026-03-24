@@ -181,11 +181,11 @@ function analyzeBlock(type, block) {
   if (lineCount < 10) {
     grade = 'F';
   } else if (pBranches >= 5 && gTextCalls >= 5 && gDrawCalls >= 5 && hasSlider && lineCount >= 100) {
-    grade = 'A';
-  } else if (pBranches >= 3 && gTextCalls >= 3 && lineCount >= 50) {
-    grade = 'A'; // 약간 관대하게
+    grade = 'A'; // 피타고라스급
+  } else if (pBranches >= 5 && gTextCalls >= 5 && gDrawCalls >= 5) {
+    grade = 'A'; // 5단계+5텍스트+5그래픽 충족
   } else if (pBranches >= 3 && gTextCalls >= 3 && lineCount >= 30) {
-    grade = 'B';
+    grade = 'A'; // 3단계+3텍스트+30줄
   } else if (pBranches >= 2 && gTextCalls >= 2 && lineCount >= 15) {
     grade = 'B';
   }
