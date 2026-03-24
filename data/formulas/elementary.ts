@@ -345,12 +345,12 @@ export const ELEMENTARY_FORMULAS: Formula[] = [
   tags: ['곱셈', '나눗셈', '관계', '역연산', '3학년'],
   visualType: 'mul_div_relation',
 
-  hook: '6÷2=?가 헷갈리면 2×?=6으로 바꿔봐. 2단에서 찾으면 돼! 🔄',
+  hook: '6나누기2=?가 헷갈리면 2곱하기?=6으로 바꿔봐. 2단에서 찾으면 돼! 🔄',
 
   principle: `
     과일 12개를 3개씩 담으면 4봉지가 돼.<br><br>
-    곱셈으로 쓰면: 3 × 4 = 12<br>
-    나눗셈으로 쓰면: 12 ÷ 3 = 4, 12 ÷ 4 = 3<br><br>
+    곱셈으로 쓰면: 3 곱하기 4 = 12<br>
+    나눗셈으로 쓰면: 12 나누기 3 = 4, 12 나누기 4 = 3<br><br>
     <strong>곱셈식 하나에서 나눗셈식 두 개가 나와!</strong><br>
     나눗셈이 어려우면 곱셈으로 바꿔서 생각해봐.
   `,
@@ -1416,9 +1416,9 @@ export const ELEMENTARY_FORMULAS: Formula[] = [
     비례식: 두 비가 같다는 뜻!<br><br>
     3 : 4 = 6 : □<br><br>
     <strong>안쪽 곱 = 바깥쪽 곱</strong><br>
-    4 × 6 = 3 × □<br>
-    24 = 3 × □<br>
-    □ = 24 ÷ 3 = <strong style="color:#00ffcc">8</strong>
+    4 곱하기 6 = 3 곱하기 □<br>
+    24 = 3 곱하기 □<br>
+    □ = 24 나누기 3 = <strong style="color:#00ffcc">8</strong>
   `,
 
   story: `고대 그리스 건축가들은 건물을 지을 때<br>

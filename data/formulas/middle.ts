@@ -938,14 +938,14 @@ export const MIDDLE_FORMULAS: Formula[] = [
     grade: '중1',
     curriculum: '2022개정',
 
-    hook: '3x² × 4x³ = 12x⁵. 숫자는 숫자끼리, 문자는 문자끼리!',
+    hook: '3x² 곱하기 4x³ = 12x⁵. 숫자는 숫자끼리, 문자는 문자끼리!',
 
     principle: `
       <strong>단항식</strong>은 숫자와 문자의 곱으로만 이루어진 식이야. (예: 3x², -5ab²)<br><br>
       단항식끼리 곱할 때:<br>
-      ① <strong>계수(숫자)</strong>끼리 곱한다: 3 × 4 = 12<br>
-      ② <strong>같은 문자</strong>의 지수끼리 더한다: x² × x³ = x^(2+3) = x⁵<br>
-      ③ 결과: 3x² × 4x³ = 12x⁵<br><br>
+      ① <strong>계수(숫자)</strong>끼리 곱한다: 3 곱하기 4 = 12<br>
+      ② <strong>같은 문자</strong>의 지수끼리 더한다: x² 곱하기 x³ = x^(2+3) = x⁵<br>
+      ③ 결과: 3x² 곱하기 4x³ = 12x⁵<br><br>
       문자가 여러 개면 각 문자별로 따로 처리해.<br>
       (2a²b)(3ab³) = 6a³b⁴
     `,
@@ -1681,7 +1681,7 @@ export const MIDDLE_FORMULAS: Formula[] = [
       &nbsp;&nbsp;&nbsp;&nbsp;② 3x + y = 11<br><br>
       ①을 ②에 대입: 3x + (2x+1) = 11<br>
       5x + 1 = 11<br>
-      5x = 10 → x = 2<br>
+      5x = 10, 대입하면 x = 2<br>
       x=2를 ①에 대입: y = 2(2)+1 = 5<br><br>
       <strong>가감법 vs 대입법:</strong> 한 식이 이미 "y = ..." 형태면 대입법이 편하고,
       계수가 맞으면 가감법이 빨라. 상황에 따라 골라 써!
